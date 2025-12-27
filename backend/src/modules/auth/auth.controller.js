@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { User } from '../users/user.model.js'
+import { Partner } from '../partners/partner.model.js'
 import { createCentryOsUserAndWallet } from '../centryos/user.service.js'
 
 export async function signup(req, res) {
@@ -120,4 +121,59 @@ export async function login(req, res) {
       partnerCode: user.partner_code
     }
   })
+}
+
+export async function adminLogin(req, res) {
+  const { email, password } = req.body
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Missing credentials' })
+  }
+
+  const user = await User.findOne({ where: { email, role: 'ADMIN' } })
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid credentials' })
+  }
+
+  const valid = await bcrypt.compare(password, user.password_hash)
+  if (!valid) {
+    return res.status(401).json({ message: 'Invalid credentials' })
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    }
+  })
+}
+
+export async function getAllPartners(req, res) {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Access denied. Admin only.' })
+  }
+
+  try {
+    const partners = await Partner.findAll({
+      attributes: ['id', 'partner_code', 'name', 'email', 'createdAt', 'updatedAt']
+    })
+    res.json({
+      success: true,
+      partners
+    })
+  } catch (error) {
+    console.error('Get all partners error:', error.message)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch partners'
+    })
+  }
 }

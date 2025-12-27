@@ -1,40 +1,50 @@
 import { useState } from 'react'
-import { login } from '../services/api'
-import { Link } from 'react-router-dom'
+import { adminLogin } from '../services/api'
+import { Link, useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
 
-export default function Login() {
-  const params = new URLSearchParams(window.location.search)
-  const partnerCode = params.get('ref')
-
+export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleSubmit = async e => {
     e.preventDefault()
     try {
-      const res = await login({ email, password, partnerCode })
+      const res = await adminLogin({ email, password })
       localStorage.setItem('token', res.token)
-      window.location.href = '/'
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: 'Welcome to your admin dashboard!',
+        timer: 2000,
+        showConfirmButton: false
+      })
+      navigate('/admin/dashboard')
     } catch (err) {
       setError(err.message)
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: err.message
+      })
     }
   }
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 420, padding: 28, borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.12)', background: '#fff' }}>
-        <h2 style={{ margin: '0 0 12px' }}>Sign in to CentryOS</h2>
-        <p style={{ margin: '0 0 20px', color: '#666' }}>Access your account to buy credits and manage wallets.</p>
+        <h2 style={{ margin: '0 0 12px' }}>Admin Sign in to CentryOS</h2>
+        <p style={{ margin: '0 0 20px', color: '#666' }}>Access your admin account to manage the system.</p>
 
-        {partnerCode && <div style={{ marginBottom: 12, color: '#444' }}>Partner: <strong>{partnerCode}</strong></div>}
         {error && <div style={{ marginBottom: 12, color: '#b00020' }}>{error}</div>}
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-          <label style={{ textAlign: 'left', fontSize: 13, color: '#333' }}>Email</label>
+          <label style={{ textAlign: 'left', fontSize: 13, color: '#333' }}>Email/Username</label>
           <input
-            type="email"
-            placeholder="Enter you email"
+            type="text"
+            placeholder="Enter your email or username"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
@@ -55,7 +65,7 @@ export default function Login() {
         </form>
 
         <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: 14 }}>
-          <div>New here? <Link to="/signup">Create account</Link></div>
+          <div>Regular user? <Link to="/login">User login</Link></div>
           <div>Partner? <Link to="/partner/login">Partner login</Link></div>
         </div>
       </div>

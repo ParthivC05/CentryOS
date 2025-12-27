@@ -69,4 +69,52 @@ export async function login(payload) {
   return res.json()
 }
 
+export async function partnerLogin(payload) {
+  const res = await fetch(`${API_BASE}/partners/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.message || 'Partner login failed')
+  }
+
+  return res.json()
+}
+
+export async function adminLogin(payload) {
+  const res = await fetch(`${API_BASE}/auth/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.message || 'Admin login failed')
+  }
+
+  return res.json()
+}
+
+export async function createUser(payload) {
+  const res = await api.post('/partners/add', payload)
+
+  if (!res.success) {
+    throw new Error(res.message || 'Create user failed')
+  }
+
+  return res
+}
+
+export async function getAllPartners() {
+  return await api.get('/auth/admin/partners')
+}
+
+export async function getUsersByPartner() {
+  return await api.get('/partners/users')
+}
+
 export default api

@@ -15,6 +15,10 @@ const User = sequelize.define('User', {
   },
   password_hash: DataTypes.STRING,
   partner_code: DataTypes.STRING,
+  role: {
+    type: DataTypes.ENUM('USER', 'PARTNER', 'ADMIN'),
+    defaultValue: 'USER'
+  },
 
   centryos_entity_id: DataTypes.STRING,
   centryos_wallet_id: DataTypes.STRING
