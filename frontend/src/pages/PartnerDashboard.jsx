@@ -14,60 +14,108 @@ export default function PartnerDashboard() {
     try {
       const res = await getUsersByPartner()
       setUsers(res.users || [])
-      setLoading(false)
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to fetch users'
-      })
+    } catch {
+      Swal.fire('Error', 'Failed to fetch users', 'error')
+    } finally {
       setLoading(false)
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
   if (loading) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', marginTop: '50px' }}>
-        Loading...
+      <div className="h-dvh flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="animate-spin h-12 w-12 border-4 border-purple-400 border-b-transparent rounded-full" />
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '10px', color: '#333' }}>Partner Dashboard</h1>
-      <p style={{ marginBottom: '30px', color: '#666' }}>Manage your associated users</p>
-      
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
-          <thead>
-            <tr style={{ background: '#2563eb', color: '#fff' }}>
-              <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>ID</th>
-              <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>First Name</th>
-              <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Last Name</th>
-              <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Email</th>
-              <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Created At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user, index) => (
-              <tr key={user.id} style={{ background: index % 2 === 0 ? '#f9f9f9' : '#fff' }}>
-                <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{user.id}</td>
-                <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{user.first_name}</td>
-                <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{user.last_name}</td>
-                <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{user.email}</td>
-                <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="h-dvh overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative">
+
+      {/* Background blobs (no scroll) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl" />
       </div>
-      
-      {users.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
-          <p>No users found for your partner code.</p>
-        </div>
-      )}
+
+      <div className="relative z-10 h-full grid grid-rows-[auto_1fr] px-4 md:px-6">
+
+        {/* Header */}
+        <header className="max-w-7xl mx-auto w-full py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-white">Partner Dashboard</h1>
+            <p className="text-gray-300">
+              Manage your associated users and track their activity
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold w-fit"
+          >
+            Logout
+          </button>
+        </header>
+
+        {/* Table Area */}
+        <main className="max-w-7xl mx-auto w-full pb-6">
+          <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden flex flex-col">
+
+            {/* Scrollable Table */}
+            <div className="overflow-auto">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white z-10">
+                  <tr>
+                    {['ID', 'First Name', 'Last Name', 'Email', 'Created At'].map(h => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+         <tbody>
+  {users.length > 0 &&
+    users.map((u, i) => (
+      <tr
+        key={u.id}
+        className={`border-t border-white/10 ${
+          i % 2 === 0 ? 'bg-white/5' : ''
+        }`}
+      >
+        <td className="px-4 py-3 text-gray-300 whitespace-nowrap">{u.id}</td>
+        <td className="px-4 py-3 text-white font-medium">{u.first_name}</td>
+        <td className="px-4 py-3 text-gray-300">{u.last_name}</td>
+        <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+          {u.email}
+        </td>
+        <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+          {new Date(u.createdAt).toLocaleDateString()}
+        </td>
+      </tr>
+    ))}
+</tbody>
+
+              </table>
+            </div>
+
+            {/* Empty state */}
+            {users.length === 0 && (
+              <div className="py-12 text-center text-gray-400">
+                No users found for your partner code
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

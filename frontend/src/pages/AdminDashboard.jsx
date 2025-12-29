@@ -21,348 +21,210 @@ export default function AdminDashboard() {
     try {
       const res = await getAllPartners();
       setPartners(res.partners || []);
-      setLoading(false);
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to fetch partners",
-      });
+    } catch {
+      Swal.fire("Error", "Failed to fetch partners", "error");
+    } finally {
       setLoading(false);
     }
   };
-
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+};
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createUser({
-        ...formData,
-        role: "PARTNER",
-      });
-      Swal.fire({
-        icon: "success",
-        title: "Success",
-        text: "Partner created successfully!",
-      });
+      await createUser({ ...formData, role: "PARTNER" });
+      Swal.fire("Success", "Partner created successfully", "success");
       setModalOpen(false);
-      setFormData({
-        partnerCode: "",
-        name: "",
-        email: "",
-        password: "",
-      });
-      fetchPartners(); // Refresh the list
+      setFormData({ partnerCode: "", name: "", email: "", password: "" });
+      fetchPartners();
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: err.message || "Failed to create partner",
-      });
+      Swal.fire("Error", err.message || "Failed to create partner", "error");
     }
   };
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", textAlign: "center", marginTop: "50px" }}>
-        Loading...
+      <div className="h-dvh flex items-center justify-center bg-gradient-to-br from-slate-900 via-orange-900 to-slate-900">
+        <div className="animate-spin h-12 w-12 border-4 border-orange-400 border-b-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px", width: "100%", margin: "0 auto" }}>
-      <div style={{ width: "100%" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "10px",
-          }}
-        >
-          <h1 style={{ margin: 0, color: "#333" }}>Admin Dashboard</h1>
+    <div className="h-dvh overflow-hidden bg-gradient-to-br from-slate-900 via-orange-900 to-slate-900 relative">
 
-          <button
-            onClick={() => setModalOpen(true)}
-            style={{
-              padding: "10px 20px",
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
-          >
-            Add Partner
-          </button>
-        </div>
+      {/* Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-red-500/20 rounded-full blur-3xl" />
       </div>
 
-      <p style={{ marginBottom: "30px", color: "#666" }}>
-        Manage all partners in the system
-      </p>
+      <div className="relative z-10 h-full grid grid-rows-[auto_1fr] px-4 md:px-6">
 
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          <thead>
-            <tr style={{ background: "#2563eb", color: "#fff" }}>
-              <th
-                style={{
-                  padding: "15px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                }}
-              >
-                ID
-              </th>
-              <th
-                style={{
-                  padding: "15px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                }}
-              >
-                Partner Code
-              </th>
-              <th
-                style={{
-                  padding: "15px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                }}
-              >
-                Name
-              </th>
-              <th
-                style={{
-                  padding: "15px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                }}
-              >
-                Email
-              </th>
-              <th
-                style={{
-                  padding: "15px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                }}
-              >
-                Created At
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {partners.map((partner, index) => (
-              <tr
-                key={partner.id}
-                style={{ background: index % 2 === 0 ? "#f9f9f9" : "#fff" }}
-              >
-                <td style={{ padding: "15px", borderBottom: "1px solid #eee" }}>
-                  {partner.id}
-                </td>
-                <td style={{ padding: "15px", borderBottom: "1px solid #eee" }}>
-                  {partner.partner_code}
-                </td>
-                <td style={{ padding: "15px", borderBottom: "1px solid #eee" }}>
-                  {partner.name}
-                </td>
-                <td style={{ padding: "15px", borderBottom: "1px solid #eee" }}>
-                  {partner.email}
-                </td>
-                <td style={{ padding: "15px", borderBottom: "1px solid #eee" }}>
-                  {new Date(partner.createdAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <header className="max-w-7xl mx-auto w-full py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
+    <p className="text-gray-300">Manage all partners in the system</p>
+  </div>
+
+  {/* Actions */}
+  <div className="flex gap-3 flex-wrap">
+    <button
+      onClick={() => setModalOpen(true)}
+      className="bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+    >
+      + Add Partner
+    </button>
+
+    <button
+      onClick={handleLogout}
+      className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+    >
+      Logout
+    </button>
+  </div>
+</header>
+
+
+        {/* Table Container */}
+        <main className="max-w-7xl mx-auto w-full pb-6">
+          <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden flex flex-col">
+
+            {/* Table Scroll */}
+            <div className="overflow-auto flex-1">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 bg-gradient-to-r from-orange-600 to-red-600 text-white z-10">
+                  <tr>
+                    {["ID", "Partner Code", "Name", "Email", "Created At"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {partners.map((p, i) => (
+                    <tr
+                      key={p.id}
+                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""
+                        }`}
+                    >
+                      <td className="px-4 py-3 text-gray-300">{p.id}</td>
+                      <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
+                        {p.partner_code}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                        {p.name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                        {p.email}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {partners.length === 0 && (
+              <div className="py-12 text-center text-gray-400">
+                No partners found
+              </div>
+            )}
+          </div>
+        </main>
       </div>
-
-      {partners.length === 0 && (
-        <div style={{ textAlign: "center", padding: "50px", color: "#666" }}>
-          <p>No partners found in the system.</p>
-        </div>
-      )}
 
       {modalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: "30px",
-              borderRadius: "8px",
-              width: "400px",
-              maxWidth: "90%",
-            }}
-          >
-            <h2 style={{ marginBottom: "20px", color: "#333" }}>
-              Add New Partner
-            </h2>
-            <form
-              onSubmit={handleSubmit}
-              style={{ display: "grid", gap: "15px" }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative animate-in fade-in slide-in-from-bottom-4">
+
+            {/* Close Button */}
+            <button
+              onClick={() => setModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              aria-label="Close modal"
             >
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Partner Code
-                </label>
-                <input
-                  type="text"
-                  name="partnerCode"
-                  value={formData.partnerCode}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Add Partner
+            </h2>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                name="partnerCode"
+                placeholder="Partner Code"
+                value={formData.partnerCode}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#2563eb",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                  }}
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 rounded-lg transition"
                 >
-                  Create Partner
+                  Create
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#6b7280",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition"
                 >
                   Cancel
                 </button>
@@ -371,6 +233,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
