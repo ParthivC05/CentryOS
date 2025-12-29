@@ -4,7 +4,7 @@ import fs from 'fs'
 
 async function main() {
   const args = process.argv.slice(2)
-  const url = args[0] || process.env.WEBHOOK_URL || 'http://localhost:5000/webhooks/centryos'
+  const url = args[0] || process.env.WEBHOOK_URL 
   const secret = args[1] || process.env.CENTRYOS_WEBHOOK_SECRET || 'test_secret'
   const payloadPath = args[2]
 

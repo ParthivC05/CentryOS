@@ -31,7 +31,7 @@ export async function createPaymentLink(user, paymentDetails = {}) {
         amount,
         name: paymentName,
         expiredAt,
-        redirectTo: process.env.FRONTEND_URL || 'https://localhost:5173',
+        redirectTo: process.env.FRONTEND_URL ,
         amountLocked,
         customerPays,
         customUrlPath: urlPath,

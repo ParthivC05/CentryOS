@@ -8,7 +8,7 @@ export async function createPayoutLink(user, amount, options = {}) {
     const {
       currency = 'USD',
       expiredAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      redirectTo = process.env.FRONTEND_URL || 'https://localhost:5173',
+      redirectTo = process.env.FRONTEND_URL ,
       acceptedPayoutOptions = ['bank', 'card', 'paypal','venmo']
     } = options
 
