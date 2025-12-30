@@ -5,8 +5,9 @@ export async function createCentryOsUserAndWallet(user) {
   try {
     const token = await getCentryOsToken()
 
-    // Step 1: Create CentryOS user account
+
     console.log(`Creating CentryOS account for user ${user.id}...`)
+
     const userRes = await axios.post(
       `${process.env.CENTRYOS_ACCOUNTS_BASE_URL}/v1/ext/account/create-user`,
       {
@@ -21,16 +22,16 @@ export async function createCentryOsUserAndWallet(user) {
       }
     )
 
-    if (!userRes.data.account || !userRes.data.account.id) {
-      throw new Error('Failed to create CentryOS user: No account ID returned')
+    const entityId = userRes?.data?.account?.id
+    if (!entityId) {
+      throw new Error('Failed to create CentryOS user: account ID missing')
     }
 
-    const entityId = userRes.data.account.id
-    console.log(`CentryOS account created: ${entityId}`)
+    console.log('CentryOS user created:', entityId)
 
-    // Step 2: Create wallet
-    console.log(`Creating wallet for entity ${entityId}...`)
-    const walletRes = await axios.post(
+    console.log('Creating spend wallet (first call)...')
+
+    const createWalletRes = await axios.post(
       `${process.env.CENTRYOS_LIQUIDITY_BASE_URL}/v1/ext/wallet/create`,
       {
         entityId,
@@ -41,50 +42,56 @@ export async function createCentryOsUserAndWallet(user) {
       }
     )
 
-    // Validate wallet creation was successful
-    if (!walletRes.data.success) {
-      throw new Error(`Wallet creation failed: ${walletRes.data.message || 'Unknown error'}`)
+    if (!createWalletRes?.data?.success) {
+      throw new Error(
+        createWalletRes?.data?.message || 'Wallet creation failed (first call)'
+      )
     }
 
-    // Extract wallet ID from response
-    let walletId = null
-    
-    if (walletRes.data.wallets && Array.isArray(walletRes.data.wallets) && walletRes.data.wallets.length > 0) {
-      // Pick USD wallet if available
-      const usdWallet = walletRes.data.wallets.find(w => w.currency === 'USD')
-      
-      if (usdWallet) {
-        walletId = usdWallet.id
-        console.log('Using USD wallet ID:', walletId)
-      } else {
-        // Fallback to first wallet
-        walletId = walletRes.data.wallets[0].id
-        console.log('Using default wallet ID:', walletId)
+    console.log('Wallet created successfully (first call)')
+
+    console.log('Fetching wallet details (second call)...')
+
+    const fetchWalletRes = await axios.post(
+      `${process.env.CENTRYOS_LIQUIDITY_BASE_URL}/v1/ext/wallet/create`,
+      {
+        entityId,
+        walletType: 'SPEND'
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` }
       }
-    } else {
-      // Wallet created successfully but wallet details not in response
-      // Use entityId as wallet reference (wallet is linked to entity)
-      walletId = entityId
-      console.log('Wallet created (using entityId as reference):', walletId)
+    )
+
+    if (!fetchWalletRes?.data?.success || !Array.isArray(fetchWalletRes.data.wallets)) {
+      throw new Error('Failed to fetch wallets (second call)')
     }
 
-    console.log(`Wallet created successfully: ${walletId}`)
+    const usdWallet = fetchWalletRes.data.wallets.find(
+      wallet => wallet.currency === 'USD'
+    )
+
+    if (!usdWallet?.id) {
+      throw new Error('USD wallet not found')
+    }
+
+    console.log('USD Wallet ID:', usdWallet.id)
 
     return {
       entityId,
-      walletId
+      walletId: usdWallet.id
     }
   } catch (error) {
     console.error('CentryOS integration error:', {
       message: error.message,
       status: error.response?.status,
-      data: error.response?.data,
-      config: error.config ? {
-        url: error.config.url,
-        method: error.config.method,
-        data: error.config.data
-      } : null
+      data: error.response?.data
     })
-    throw new Error(`CentryOS integration failed: ${error.response?.data?.message || error.message}`)
+
+    throw new Error(
+      error.response?.data?.message ||
+      error.message ||
+      'CentryOS integration failed'
+    )
   }
 }
