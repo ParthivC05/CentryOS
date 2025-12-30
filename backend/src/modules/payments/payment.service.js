@@ -10,7 +10,7 @@ export async function createPaymentLink(user, paymentDetails = {}) {
       amount = 0,
       currency = 'USD',
       name = null,
-      expiredAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      expiredAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes 
       customUrlPath = null,
       isOpenLink = false,
       amountLocked = true,
@@ -31,13 +31,13 @@ export async function createPaymentLink(user, paymentDetails = {}) {
         amount,
         name: paymentName,
         expiredAt,
-        redirectTo: process.env.FRONTEND_URL ,
+        redirectTo: process.env.FRONTEND_URL,
         amountLocked,
         customerPays,
         customUrlPath: urlPath,
         isOpenLink,
         acceptedPaymentOptions,
-        externalId: user.email // Using email to identify user payment
+        externalId: String(user.id)
       },
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -56,7 +56,7 @@ export async function createPaymentLink(user, paymentDetails = {}) {
     }
 
     console.log(`Payment link created successfully for ${user.email}`)
-    
+
     return paymentLink
   } catch (error) {
     console.error('Payment link creation error:', {
