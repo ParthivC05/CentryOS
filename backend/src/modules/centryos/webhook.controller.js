@@ -7,9 +7,7 @@ export async function centryOsWebhook(req, res) {
   const requestId = crypto.randomUUID()
 
   try {
-    /* ------------------------------------------------------------------ */
-    /*                              LOG ENTRY                              */
-    /* ------------------------------------------------------------------ */
+  
     console.info('[CENTRYOS_WEBHOOK] Incoming request', {
       requestId,
       method: req.method,
@@ -19,9 +17,6 @@ export async function centryOsWebhook(req, res) {
       userAgent: req.get('user-agent')
     })
 
-    /* ------------------------------------------------------------------ */
-    /*                         RAW BODY VALIDATION                         */
-    /* ------------------------------------------------------------------ */
     const rawBody = req.rawBody
     if (!rawBody) {
       console.error('[CENTRYOS_WEBHOOK] Raw body missing', { requestId })
@@ -36,9 +31,7 @@ export async function centryOsWebhook(req, res) {
       return res.status(500).json({ success: false, message: 'Webhook secret not configured' })
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                      SIGNATURE VERIFICATION                         */
-    /* ------------------------------------------------------------------ */
+
     const expectedSignature = crypto
       .createHmac('sha512', secret)
       .update(rawBody)
@@ -61,9 +54,7 @@ export async function centryOsWebhook(req, res) {
 
     console.info('[CENTRYOS_WEBHOOK] Signature verified', { requestId })
 
-    /* ------------------------------------------------------------------ */
-    /*                          PAYLOAD PARSING                            */
-    /* ------------------------------------------------------------------ */
+
     const payload = JSON.parse(rawBody.toString())
     const { eventType, status } = payload
     const p = payload.payload || {}
@@ -83,9 +74,7 @@ export async function centryOsWebhook(req, res) {
       transactionId: p.transactionId
     })
 
-    /* ------------------------------------------------------------------ */
-    /*                        RECORD PREPARATION                           */
-    /* ------------------------------------------------------------------ */
+
     const record = {
       eventType,
       status,
@@ -102,39 +91,55 @@ export async function centryOsWebhook(req, res) {
       transactionId: p.transactionId,
       paymentLink: p.paymentLink || null,
       feeCharged: p.feeCharged || null,
+      metadata: p.metadata || null,
       rawPayload: payload
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                         USER ASSOCIATION                            */
-    /* ------------------------------------------------------------------ */
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { centryos_entity_id: record.entityId },
-          { centryos_wallet_id: record.walletId }
-        ]
-      }
-    })
 
-    if (user) {
-      record.userId = user.id
-      console.info('[CENTRYOS_WEBHOOK] User associated', {
-        requestId,
-        userId: user.id,
-        email: user.email
-      })
-    } else {
-      console.warn('[CENTRYOS_WEBHOOK] No user association found', {
-        requestId,
-        entityId: record.entityId,
-        walletId: record.walletId
-      })
+    let user = null
+
+    // First try to find user by metadata.userId (from payment link creation)
+    if (p.metadata && p.metadata.userId) {
+      user = await User.findByPk(p.metadata.userId)
+      if (user) {
+        record.userId = user.id
+        console.info('[CENTRYOS_WEBHOOK] User associated via metadata', {
+          requestId,
+          userId: user.id,
+          email: user.email
+        })
+      }
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                         IDEMPOTENT UPSERT                            */
-    /* ------------------------------------------------------------------ */
+    // Fallback to entityId/walletId lookup if metadata didn't work
+    if (!user) {
+      user = await User.findOne({
+        where: {
+          [Op.or]: [
+            { centryos_entity_id: record.entityId },
+            { centryos_wallet_id: record.walletId }
+          ]
+        }
+      })
+
+      if (user) {
+        record.userId = user.id
+        console.info('[CENTRYOS_WEBHOOK] User associated via entity/wallet', {
+          requestId,
+          userId: user.id,
+          email: user.email
+        })
+      } else {
+        console.warn('[CENTRYOS_WEBHOOK] No user association found', {
+          requestId,
+          entityId: record.entityId,
+          walletId: record.walletId,
+          metadataUserId: p.metadata?.userId
+        })
+      }
+    }
+
+
     let created = false
 
     if (record.transactionId) {
@@ -158,9 +163,7 @@ export async function centryOsWebhook(req, res) {
       created = true
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                             SUCCESS LOG                             */
-    /* ------------------------------------------------------------------ */
+
     console.info('[CENTRYOS_WEBHOOK] Processed successfully', {
       requestId,
       eventType,
