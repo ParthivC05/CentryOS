@@ -37,12 +37,7 @@ export async function createPaymentLink(user, paymentDetails = {}) {
         customUrlPath: urlPath,
         isOpenLink,
         acceptedPaymentOptions,
-        externalId: String(user.id),
-        metadata: {
-          userId: user.id,
-          customerId: String(user.id),
-          orderId: `order-${user.id}-${Date.now()}`
-        }
+        externalId: String(user.id)
       },
       {
         headers: { Authorization: `Bearer ${token}` }
