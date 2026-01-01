@@ -12,8 +12,8 @@ const allowedOrigins = [
 ]
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow server-to-server, Postman, curl
+  origin(origin, callback) {
+    // Allow server-to-server, webhooks, curl, Postman
     if (!origin) return callback(null, true)
 
     if (allowedOrigins.includes(origin)) {
@@ -24,10 +24,22 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'signature'
+  ]
 }))
 
-app.use(express.json())
+// ✅ Capture raw body safely for webhooks
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf
+    }
+  })
+)
+
 app.use('/api', routes)
 
 export default app

@@ -4,6 +4,8 @@ import authMiddleware from '../middlewares/auth.middleware.js'
 
 const router = express.Router()
 
+router.use(express.json())
+
 router.post('/signup', signup)
 router.post('/login', login)
 router.post('/admin/login', adminLogin)

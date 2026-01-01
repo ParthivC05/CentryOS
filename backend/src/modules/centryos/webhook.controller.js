@@ -4,41 +4,93 @@ import { User } from '../users/user.model.js'
 import { Op } from 'sequelize'
 
 export async function centryOsWebhook(req, res) {
+  const requestId = crypto.randomUUID()
+
   try {
-    const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body))
+    /* ------------------------------------------------------------------ */
+    /*                              LOG ENTRY                              */
+    /* ------------------------------------------------------------------ */
+    console.info('[CENTRYOS_WEBHOOK] Incoming request', {
+      requestId,
+      method: req.method,
+      url: req.originalUrl || req.url,
+      contentType: req.get('content-type'),
+      signaturePresent: Boolean(req.get('signature')),
+      userAgent: req.get('user-agent')
+    })
 
-    const signature = (req.get('signature') || req.headers['signature'] || '').toString()
-    const secret = process.env.CENTRYOS_WEBHOOK_SECRET || ''
-
-    // Log incoming webhook (avoid logging secrets)
-    try {
-      console.info('CentryOS webhook received', {
-        method: req.method,
-        path: req.originalUrl || req.url,
-        signature: signature || null,
-        rawBodyLength: rawBody.length,
-        rawBodyPreview: rawBody.toString().slice(0, 512)
-      })
-    } catch (e) {
-      console.debug('Failed to serialize incoming webhook for logging', e)
+    /* ------------------------------------------------------------------ */
+    /*                         RAW BODY VALIDATION                         */
+    /* ------------------------------------------------------------------ */
+    const rawBody = req.rawBody
+    if (!rawBody) {
+      console.error('[CENTRYOS_WEBHOOK] Raw body missing', { requestId })
+      return res.status(400).json({ success: false, message: 'Raw body missing' })
     }
 
-    const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex')
+    const signature = req.get('signature')
+    const secret = process.env.CENTRYOS_WEBHOOK_SECRET
 
-    if (!signature || signature !== expected) {
-      console.warn('Invalid webhook signature', { receivedSignature: signature })
+    if (!secret) {
+      console.error('[CENTRYOS_WEBHOOK] Secret not configured', { requestId })
+      return res.status(500).json({ success: false, message: 'Webhook secret not configured' })
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*                      SIGNATURE VERIFICATION                         */
+    /* ------------------------------------------------------------------ */
+    const expectedSignature = crypto
+      .createHmac('sha512', secret)
+      .update(rawBody)
+      .digest('hex')
+
+    const isValidSignature =
+      signature &&
+      crypto.timingSafeEqual(
+        Buffer.from(signature, 'utf8'),
+        Buffer.from(expectedSignature, 'utf8')
+      )
+
+    if (!isValidSignature) {
+      console.warn('[CENTRYOS_WEBHOOK] Invalid signature', {
+        requestId,
+        received: signature
+      })
       return res.status(401).json({ success: false, message: 'Invalid signature' })
     }
 
+    console.info('[CENTRYOS_WEBHOOK] Signature verified', { requestId })
+
+    /* ------------------------------------------------------------------ */
+    /*                          PAYLOAD PARSING                            */
+    /* ------------------------------------------------------------------ */
     const payload = JSON.parse(rawBody.toString())
     const { eventType, status } = payload
     const p = payload.payload || {}
 
+    if (!['COLLECTION', 'WITHDRAWAL'].includes(eventType)) {
+      console.info('[CENTRYOS_WEBHOOK] Unsupported event ignored', {
+        requestId,
+        eventType
+      })
+      return res.status(200).json({ success: true, ignored: true })
+    }
+
+    console.info('[CENTRYOS_WEBHOOK] Event received', {
+      requestId,
+      eventType,
+      status,
+      transactionId: p.transactionId
+    })
+
+    /* ------------------------------------------------------------------ */
+    /*                        RECORD PREPARATION                           */
+    /* ------------------------------------------------------------------ */
     const record = {
       eventType,
       status,
       entry: p.entry,
-      amount: p.amount,
+      amount: p.amount ? Number(p.amount) : null,
       method: p.method,
       summary: p.summary,
       currency: p.currency,
@@ -53,7 +105,9 @@ export async function centryOsWebhook(req, res) {
       rawPayload: payload
     }
 
-    // Try to associate with a user if we can find one
+    /* ------------------------------------------------------------------ */
+    /*                         USER ASSOCIATION                            */
+    /* ------------------------------------------------------------------ */
     const user = await User.findOne({
       where: {
         [Op.or]: [
@@ -63,33 +117,66 @@ export async function centryOsWebhook(req, res) {
       }
     })
 
-    if (user) record.userId = user.id
+    if (user) {
+      record.userId = user.id
+      console.info('[CENTRYOS_WEBHOOK] User associated', {
+        requestId,
+        userId: user.id,
+        email: user.email
+      })
+    } else {
+      console.warn('[CENTRYOS_WEBHOOK] No user association found', {
+        requestId,
+        entityId: record.entityId,
+        walletId: record.walletId
+      })
+    }
 
-    // Upsert by transactionId if present
-    let created
+    /* ------------------------------------------------------------------ */
+    /*                         IDEMPOTENT UPSERT                            */
+    /* ------------------------------------------------------------------ */
+    let created = false
+
     if (record.transactionId) {
       const [instance, wasCreated] = await Transaction.findOrCreate({
         where: { transactionId: record.transactionId },
         defaults: record
       })
+
+      if (!wasCreated) {
+        await instance.update({
+          status: record.status,
+          summary: record.summary,
+          description: record.description,
+          rawPayload: record.rawPayload
+        })
+      }
+
       created = wasCreated
     } else {
       await Transaction.create(record)
       created = true
     }
 
-    console.log('CentryOS webhook processed', { eventType, transactionId: record.transactionId, userId: record.userId })
+    /* ------------------------------------------------------------------ */
+    /*                             SUCCESS LOG                             */
+    /* ------------------------------------------------------------------ */
+    console.info('[CENTRYOS_WEBHOOK] Processed successfully', {
+      requestId,
+      eventType,
+      transactionId: record.transactionId,
+      userId: record.userId,
+      created
+    })
 
-    const responseBody = { success: true, created }
-    console.info('CentryOS webhook response', responseBody)
-    return res.status(200).json(responseBody)
-  } catch (err) {
-    console.error('Webhook processing error:', err)
-    try {
-      console.error('Raw webhook body on error:', req.body)
-    } catch (e) {
-      /* ignore */
-    }
+    return res.status(200).json({ success: true, created })
+  } catch (error) {
+    console.error('[CENTRYOS_WEBHOOK] Processing failed', {
+      requestId,
+      message: error.message,
+      stack: error.stack
+    })
+
     return res.status(500).json({ success: false, message: 'Webhook processing error' })
   }
 }

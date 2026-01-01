@@ -5,6 +5,8 @@ import { createPayout } from '../modules/payments/payout.controller.js'
 
 const router = express.Router()
 
+router.use(express.json())
+
 router.post('/payin', authMiddleware, createPayIn)
 router.post('/payout', authMiddleware, createPayout)
 router.get('/transactions', getTransactions)
