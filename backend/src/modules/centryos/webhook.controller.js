@@ -98,8 +98,22 @@ export async function centryOsWebhook(req, res) {
 
     let user = null
 
-    // First try to find user by metadata.userId (from payment link creation)
-    if (p.metadata && p.metadata.userId) {
+    // First try to find user by paymentLink.externalId
+    if (p.paymentLink && p.paymentLink.externalId) {
+      user = await User.findByPk(p.paymentLink.externalId)
+      if (user) {
+        record.userId = user.id
+        console.info('[CENTRYOS_WEBHOOK] User associated via paymentLink externalId', {
+          requestId,
+          userId: user.id,
+          email: user.email,
+          externalId: p.paymentLink.externalId
+        })
+      }
+    }
+
+    // Fallback to metadata.userId if externalId didn't work
+    if (!user && p.metadata && p.metadata.userId) {
       user = await User.findByPk(p.metadata.userId)
       if (user) {
         record.userId = user.id
@@ -134,7 +148,8 @@ export async function centryOsWebhook(req, res) {
           requestId,
           entityId: record.entityId,
           walletId: record.walletId,
-          metadataUserId: p.metadata?.userId
+          metadataUserId: p.metadata?.userId,
+          externalId: p.paymentLink?.externalId
         })
       }
     }
