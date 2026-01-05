@@ -9,6 +9,10 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [amount, setAmount] = useState('0')
   const [modalType, setModalType] = useState('buy')
+  const [showTransactionsModal, setShowTransactionsModal] = useState(false)
+  const [transactions, setTransactions] = useState([])
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
+  const [transactionsError, setTransactionsError] = useState(null)
 
   if (!token) {
     window.location.href = '/login'
@@ -29,6 +33,25 @@ export default function Home() {
     setError(null)
     setSuccessMsg(null)
     setAmount('0')
+  }
+
+  const handleTransactionsClick = async () => {
+    setShowTransactionsModal(true)
+    setTransactionsError(null)
+    setTransactionsLoading(true)
+
+    try {
+      const response = await api.get('/payments/my-transactions?eventType=COLLECTION')
+      if (response.success) {
+        setTransactions(response.data)
+      } else {
+        setTransactionsError('Failed to fetch transactions')
+      }
+    } catch (err) {
+      setTransactionsError(err.message || 'Failed to fetch transactions')
+    } finally {
+      setTransactionsLoading(false)
+    }
   }
 
   const handleCreatePaymentLink = async () => {
@@ -114,14 +137,14 @@ export default function Home() {
               loading={loading}
             />
 
-            {/* About */}
-            <div className="rounded-2xl p-8 text-white shadow-xl bg-gradient-to-br from-indigo-600 to-purple-700">
-              <Icon />
-              <h2 className="text-2xl font-bold mb-2">About CentryOS</h2>
-              <p className="text-indigo-100 text-sm">
-                Secure wallet and payment management platform
-              </p>
-            </div>
+            {/* Transactions */}
+            <ActionCard
+              title="Transactions"
+              desc="View your buy transaction history"
+              gradient="from-purple-600 to-pink-700"
+              onClick={handleTransactionsClick}
+              loading={transactionsLoading}
+            />
 
           </div>
         </main>
@@ -169,6 +192,62 @@ export default function Home() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transactions Modal */}
+      {showTransactionsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-6xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Buy Transactions</h2>
+              <button
+                onClick={() => setShowTransactionsModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {transactionsLoading && <p className="text-center">Loading transactions...</p>}
+
+            {transactionsError && <p className="text-red-600 text-center">{transactionsError}</p>}
+
+            {!transactionsLoading && !transactionsError && transactions.length === 0 && (
+              <p className="text-center text-gray-500">No transactions found</p>
+            )}
+
+            {!transactionsLoading && !transactionsError && transactions.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-2 text-left">Transaction ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">User ID</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Payment Method</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Receiving Amount</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-2">{transaction.transactionId}</td>
+                        <td className="border border-gray-300 px-4 py-2">{transaction.userId}</td>
+                        <td className="border border-gray-300 px-4 py-2">{transaction.method}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">${transaction.amount}</td>
+                        <td className="border border-gray-300 px-4 py-2">{transaction.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
-import { getAllPartners, createUser } from "../services/api";
+import { getAllPartners, createUser, getAllUsers, getAllTransactions } from "../services/api";
 import Swal from "sweetalert2";
 
 export default function AdminDashboard() {
   const [partners, setPartners] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState('partners');
+  const [transactionTab, setTransactionTab] = useState('buy');
   const [formData, setFormData] = useState({
     partnerCode: "",
     name: "",
@@ -14,8 +18,29 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    fetchPartners();
-  }, []);
+    fetchData();
+  }, [currentPage, transactionTab]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      if (currentPage === 'partners') {
+        const res = await getAllPartners();
+        setPartners(res.partners || []);
+      } else if (currentPage === 'users') {
+        const res = await getAllUsers();
+        setUsers(res.users || []);
+      } else if (currentPage === 'transactions') {
+        const params = transactionTab === 'buy' ? { eventType: 'COLLECTION' } : { eventType: 'WITHDRAWAL' };
+        const res = await getAllTransactions(params);
+        setTransactions(res.data || []);
+      }
+    } catch (error) {
+      Swal.fire("Error", `Failed to fetch ${currentPage}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPartners = async () => {
     try {
@@ -74,26 +99,64 @@ const handleLogout = () => {
 
       <div className="relative z-10 h-full grid grid-rows-[auto_1fr] px-4 md:px-6">
 
-    <header className="max-w-7xl mx-auto w-full py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-  <div>
-    <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-    <p className="text-gray-300">Manage all partners in the system</p>
+    <header className="max-w-7xl mx-auto w-full py-6 flex flex-col gap-4">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
+      <p className="text-gray-300">Manage all partners in the system</p>
+    </div>
+
+    {/* Actions */}
+    <div className="flex gap-3 flex-wrap">
+      {currentPage === 'partners' && (
+        <button
+          onClick={() => setModalOpen(true)}
+          className="bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+        >
+          + Add Partner
+        </button>
+      )}
+
+      <button
+        onClick={handleLogout}
+        className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+      >
+        Logout
+      </button>
+    </div>
   </div>
 
-  {/* Actions */}
-  <div className="flex gap-3 flex-wrap">
+  {/* Navigation Tabs */}
+  <div className="flex gap-2 border-b border-white/20">
     <button
-      onClick={() => setModalOpen(true)}
-      className="bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+      onClick={() => setCurrentPage('partners')}
+      className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+        currentPage === 'partners'
+          ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+          : 'text-gray-300 hover:text-white hover:bg-white/10'
+      }`}
     >
-      + Add Partner
+      Partners
     </button>
-
     <button
-      onClick={handleLogout}
-      className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+      onClick={() => setCurrentPage('users')}
+      className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+        currentPage === 'users'
+          ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+          : 'text-gray-300 hover:text-white hover:bg-white/10'
+      }`}
     >
-      Logout
+      Users
+    </button>
+    <button
+      onClick={() => setCurrentPage('transactions')}
+      className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+        currentPage === 'transactions'
+          ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+          : 'text-gray-300 hover:text-white hover:bg-white/10'
+      }`}
+    >
+      Transactions
     </button>
   </div>
 </header>
@@ -103,12 +166,48 @@ const handleLogout = () => {
         <main className="max-w-7xl mx-auto w-full pb-6">
           <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden flex flex-col">
 
+            {/* Transaction Tabs */}
+            {currentPage === 'transactions' && (
+              <div className="flex gap-2 px-6 py-4 border-b border-white/20">
+                <button
+                  onClick={() => setTransactionTab('buy')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    transactionTab === 'buy'
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
+                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Buy Transactions
+                </button>
+                <button
+                  onClick={() => setTransactionTab('redeem')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    transactionTab === 'redeem'
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white'
+                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Redeem Transactions
+                </button>
+              </div>
+            )}
+
             {/* Table Scroll */}
             <div className="overflow-auto flex-1">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 bg-gradient-to-r from-orange-600 to-red-600 text-white z-10">
                   <tr>
-                    {["ID", "Partner Code", "Name", "Email", "Created At"].map(h => (
+                    {currentPage === 'partners' && ["ID", "Partner Code", "Name", "Email", "Created At"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                    {currentPage === 'users' && ["ID", "First Name", "Last Name", "Email", "Created At"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                    {currentPage === 'transactions' && ["ID", "Transaction ID", "User ID", "User Email", "Payment Method", "Amount", "Status", "Date"].map(h => (
                       <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
                         {h}
                       </th>
@@ -116,11 +215,10 @@ const handleLogout = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {partners.map((p, i) => (
+                  {currentPage === 'partners' && partners.map((p, i) => (
                     <tr
                       key={p.id}
-                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""
-                        }`}
+                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
                     >
                       <td className="px-4 py-3 text-gray-300">{p.id}</td>
                       <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
@@ -137,13 +235,71 @@ const handleLogout = () => {
                       </td>
                     </tr>
                   ))}
+                  {currentPage === 'users' && users.map((u, i) => (
+                    <tr
+                      key={u.id}
+                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
+                    >
+                      <td className="px-4 py-3 text-gray-300">{u.id}</td>
+                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                        {u.first_name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                        {u.last_name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                        {u.email}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                  {currentPage === 'transactions' && transactionTab === 'buy' && transactions.map((t, i) => (
+                    <tr
+                      key={t.id}
+                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
+                    >
+                      <td className="px-4 py-3 text-gray-300">{t.id}</td>
+                      <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
+                        {t.transactionId}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300">{t.userId}</td>
+                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                        {t.user?.email}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300">{t.method}</td>
+                      <td className="px-4 py-3 text-gray-300">${t.amount}</td>
+                      <td className="px-4 py-3 text-gray-300">{t.status}</td>
+                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                        {new Date(t.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                  {currentPage === 'transactions' && transactionTab === 'redeem' && (
+                    <tr>
+                      <td colSpan="8" className="px-4 py-12 text-center text-gray-400">
+                        This feature is coming soon
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {partners.length === 0 && (
+            {currentPage === 'partners' && partners.length === 0 && (
               <div className="py-12 text-center text-gray-400">
                 No partners found
+              </div>
+            )}
+            {currentPage === 'users' && users.length === 0 && (
+              <div className="py-12 text-center text-gray-400">
+                No users found
+              </div>
+            )}
+            {currentPage === 'transactions' && transactionTab === 'buy' && transactions.length === 0 && (
+              <div className="py-12 text-center text-gray-400">
+                No buy transactions found
               </div>
             )}
           </div>

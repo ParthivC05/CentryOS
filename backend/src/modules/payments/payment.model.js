@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize'
 import { sequelize } from '../../db/index.js'
+import { User } from '../users/user.model.js'
 
 const Transaction = sequelize.define('CentryTransaction', {
   id: {
@@ -31,5 +32,8 @@ const Transaction = sequelize.define('CentryTransaction', {
   tableName: 'centryos_transactions',
   timestamps: true
 })
+
+// Define associations
+Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' })
 
 export { Transaction }

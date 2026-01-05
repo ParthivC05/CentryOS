@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { User } from '../users/user.model.js'
 import { Partner } from '../partners/partner.model.js'
+import { Transaction } from '../payments/payment.model.js'
 import { createCentryOsUserAndWallet } from '../centryos/user.service.js'
 
 export async function signup(req, res) {
@@ -174,6 +175,61 @@ export async function getAllPartners(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch partners'
+    })
+  }
+}
+
+export async function getAllUsers(req, res) {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Access denied. Admin only.' })
+  }
+
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'first_name', 'last_name', 'email', 'createdAt', 'updatedAt']
+    })
+    res.json({
+      success: true,
+      users
+    })
+  } catch (error) {
+    console.error('Get all users error:', error.message)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users'
+    })
+  }
+}
+
+export async function getAllTransactions(req, res) {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Access denied. Admin only.' })
+  }
+
+  try {
+    const { eventType } = req.query
+    const whereClause = eventType ? { eventType } : {}
+
+    const transactions = await Transaction.findAll({
+      where: whereClause,
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['email']
+      }],
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    })
+
+    res.json({
+      success: true,
+      data: transactions
+    })
+  } catch (error) {
+    console.error('Get all transactions error:', error.message)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch transactions'
     })
   }
 }

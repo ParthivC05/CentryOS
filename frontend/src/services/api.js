@@ -117,4 +117,13 @@ export async function getUsersByPartner() {
   return await api.get('/partners/users')
 }
 
+export async function getAllUsers() {
+  return await api.get('/auth/admin/users')
+}
+
+export async function getAllTransactions(params = {}) {
+  const query = new URLSearchParams(params)
+  return await api.get(`/auth/admin/transactions?${query}`)
+}
+
 export default api
