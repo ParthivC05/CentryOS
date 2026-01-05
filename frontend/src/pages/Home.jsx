@@ -29,17 +29,17 @@ export default function Home() {
   }
 
   const handleRedeemClick = () => {
-    //  setModalType('redeem')
-    // setShowModal(true)
-    // setError(null)
-    // setSuccessMsg(null)
-    // setAmount('0')
-    Swal.fire({
-      title: 'Coming Soon',
-      text: 'This feature will come soon',
-      icon: 'info',
-      confirmButtonText: 'OK'
-    })
+     setModalType('redeem')
+    setShowModal(true)
+    setError(null)
+    setSuccessMsg(null)
+    setAmount('0')
+    // Swal.fire({
+    //   title: 'Coming Soon',
+    //   text: 'This feature will come soon',
+    //   icon: 'info',
+    //   confirmButtonText: 'OK'
+    // })
   }
 
   const handleTransactionsClick = async () => {

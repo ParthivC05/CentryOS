@@ -14,7 +14,7 @@ export async function createCentryOsUserAndWallet(user) {
         firstName: user.first_name,
         lastName: user.last_name,
         email: user.email,
-        identifier: `user_${user.id}`,
+        identifier: user.id,
         type: 'USER'
       },
       {
