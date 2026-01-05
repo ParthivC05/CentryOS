@@ -202,7 +202,7 @@ const handleLogout = () => {
                         {h}
                       </th>
                     ))}
-                    {currentPage === 'users' && ["ID", "First Name", "Last Name", "Email", "Created At"].map(h => (
+                    {currentPage === 'users' && ["ID", "First Name", "Last Name", "Email", "Partner Name", "Partner Code", "Created At"].map(h => (
                       <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
                         {h}
                       </th>
@@ -249,6 +249,12 @@ const handleLogout = () => {
                       </td>
                       <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
                         {u.email}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                        {u.partner ? u.partner.name : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                        {u.partner ? u.partner.partner_code : '-'}
                       </td>
                       <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                         {new Date(u.createdAt).toLocaleDateString()}

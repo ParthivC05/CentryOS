@@ -186,7 +186,13 @@ export async function getAllUsers(req, res) {
 
   try {
     const users = await User.findAll({
-      attributes: ['id', 'first_name', 'last_name', 'email', 'createdAt', 'updatedAt']
+      attributes: ['id', 'first_name', 'last_name', 'email', 'partner_code', 'createdAt', 'updatedAt'],
+      include: [{
+        model: Partner,
+        as: 'partner',
+        attributes: ['name', 'partner_code'],
+        required: false
+      }]
     })
     res.json({
       success: true,

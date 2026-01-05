@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { Partner } from './partner.model.js'
 import { User } from '../users/user.model.js'
+import { Transaction } from '../payments/payment.model.js'
 
 export async function addPartner(req, res) {
   const { partnerCode, name, email, password, role = 'PARTNER' } = req.body
@@ -156,6 +157,50 @@ export async function getUsersByPartnerCode(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch users'
+    })
+  }
+}
+
+export async function getPartnerTransactions(req, res) {
+  const partnerCode = req.user.partnerCode
+  const { eventType } = req.query
+
+  if (!partnerCode) {
+    return res.status(400).json({ message: 'Partner code not found in token' })
+  }
+
+  try {
+    // First get all users for this partner
+    const users = await User.findAll({
+      where: { partner_code: partnerCode },
+      attributes: ['id']
+    })
+
+    const userIds = users.map(user => user.id)
+
+    // Then get transactions for these users
+    const transactions = await Transaction.findAll({
+      where: {
+        userId: userIds,
+        ...(eventType && { eventType })
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['email']
+      }],
+      order: [['createdAt', 'DESC']]
+    })
+
+    res.json({
+      success: true,
+      data: transactions
+    })
+  } catch (error) {
+    console.error('Get partner transactions error:', error.message)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch transactions'
     })
   }
 }
