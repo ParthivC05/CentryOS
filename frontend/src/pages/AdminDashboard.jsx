@@ -103,7 +103,7 @@ const handleLogout = () => {
   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
       <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-      <p className="text-gray-300">Manage all partners in the system</p>
+      <p className="text-blue-300">Manage all partners in the system</p>
     </div>
 
     {/* Actions */}
@@ -119,7 +119,7 @@ const handleLogout = () => {
 
       <button
         onClick={handleLogout}
-        className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
+        className="bg-red-600 hover:bg-red-700 text-slate-900 px-6 py-3 rounded-lg font-semibold flex items-center gap-2"
       >
         Logout
       </button>
@@ -133,7 +133,7 @@ const handleLogout = () => {
       className={`px-6 py-3 rounded-t-lg font-semibold transition ${
         currentPage === 'partners'
           ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-          : 'text-gray-300 hover:text-white hover:bg-white/10'
+          : 'text-slate-900 hover:text-slate-900 hover:bg-white/10'
       }`}
     >
       Partners
@@ -143,7 +143,7 @@ const handleLogout = () => {
       className={`px-6 py-3 rounded-t-lg font-semibold transition ${
         currentPage === 'users'
           ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-          : 'text-gray-300 hover:text-white hover:bg-white/10'
+          : 'text-slate-900 hover:text-slate-900 hover:bg-white/10'
       }`}
     >
       Users
@@ -153,7 +153,7 @@ const handleLogout = () => {
       className={`px-6 py-3 rounded-t-lg font-semibold transition ${
         currentPage === 'transactions'
           ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-          : 'text-gray-300 hover:text-white hover:bg-white/10'
+          : 'text-slate-900 hover:text-slate-900 hover:bg-white/10'
       }`}
     >
       Transactions
@@ -174,7 +174,7 @@ const handleLogout = () => {
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'buy'
                       ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      : 'text-slate-900 hover:text-slate-900 hover:bg-white/10'
                   }`}
                 >
                   Buy Transactions
@@ -184,7 +184,7 @@ const handleLogout = () => {
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'redeem'
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      : 'text-slate-900 hover:text-slate-900 hover:bg-white/10'
                   }`}
                 >
                   Redeem Transactions
@@ -220,17 +220,17 @@ const handleLogout = () => {
                       key={p.id}
                       className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
                     >
-                      <td className="px-4 py-3 text-gray-300">{p.id}</td>
+                      <td className="px-4 py-3 text-blue-300">{p.id}</td>
                       <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
                         {p.partner_code}
                       </td>
-                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
                         {p.name}
                       </td>
-                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                      <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
                         {p.email}
                       </td>
-                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
                         {new Date(p.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -240,23 +240,23 @@ const handleLogout = () => {
                       key={u.id}
                       className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
                     >
-                      <td className="px-4 py-3 text-gray-300">{u.id}</td>
-                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                      <td className="px-4 py-3 text-blue-300">{u.id}</td>
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
                         {u.first_name}
                       </td>
-                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
                         {u.last_name}
                       </td>
-                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                      <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
                         {u.email}
                       </td>
-                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
                         {u.partner ? u.partner.name : '-'}
                       </td>
-                      <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
                         {u.partner ? u.partner.partner_code : '-'}
                       </td>
-                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -266,18 +266,18 @@ const handleLogout = () => {
                       key={t.id}
                       className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
                     >
-                      <td className="px-4 py-3 text-gray-300">{t.id}</td>
+                      <td className="px-4 py-3 text-blue-300">{t.id}</td>
                       <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
                         {t.transactionId}
                       </td>
-                      <td className="px-4 py-3 text-gray-300">{t.userId}</td>
-                      <td className="px-4 py-3 text-gray-400 truncate max-w-[220px]">
+                      <td className="px-4 py-3 text-blue-300">{t.userId}</td>
+                      <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
                         {t.user?.email}
                       </td>
-                      <td className="px-4 py-3 text-gray-300">{t.method}</td>
-                      <td className="px-4 py-3 text-gray-300">${t.amount}</td>
-                      <td className="px-4 py-3 text-gray-300">{t.status}</td>
-                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-3 text-blue-300">{t.method}</td>
+                      <td className="px-4 py-3 text-blue-300">${t.amount}</td>
+                      <td className="px-4 py-3 text-blue-300">{t.status}</td>
+                      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
                         {new Date(t.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -314,7 +314,7 @@ const handleLogout = () => {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-8 relative animate-in fade-in slide-in-from-bottom-4">
 
             {/* Close Button */}
             <button
@@ -328,7 +328,7 @@ const handleLogout = () => {
             </button>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Add Partner
             </h2>
 
@@ -341,7 +341,7 @@ const handleLogout = () => {
                 value={formData.partnerCode}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
 
               <input
@@ -351,7 +351,7 @@ const handleLogout = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
 
               <input
@@ -361,7 +361,7 @@ const handleLogout = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
 
               <input
@@ -371,7 +371,7 @@ const handleLogout = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
 
               {/* Actions */}
@@ -386,7 +386,7 @@ const handleLogout = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-black font-semibold py-3 rounded-lg transition "
                 >
                   Cancel
                 </button>

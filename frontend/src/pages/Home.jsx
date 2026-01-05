@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import api from '../services/api'
+import Swal from 'sweetalert2'
 
 export default function Home() {
   const token = localStorage.getItem('token')
@@ -28,11 +29,17 @@ export default function Home() {
   }
 
   const handleRedeemClick = () => {
-    setModalType('redeem')
-    setShowModal(true)
-    setError(null)
-    setSuccessMsg(null)
-    setAmount('0')
+    //  setModalType('redeem')
+    // setShowModal(true)
+    // setError(null)
+    // setSuccessMsg(null)
+    // setAmount('0')
+    Swal.fire({
+      title: 'Coming Soon',
+      text: 'This feature will come soon',
+      icon: 'info',
+      confirmButtonText: 'OK'
+    })
   }
 
   const handleTransactionsClick = async () => {
@@ -104,12 +111,14 @@ export default function Home() {
         {/* Header */}
         <header className="max-w-4xl mx-auto w-full py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold text-white">Welcome to CentryOS</h1>
+            <h1 className="text-4xl font-bold text-white">Welcome to Treasure pay</h1>
             <p className="text-gray-300">Manage your wallet and payment operations</p>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg text-white font-semibold"
+            className="bg-gradient-to-r from-red-600 to-rose-600 
+           hover:from-red-700 hover:to-rose-700
+           text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             Logout
           </button>
@@ -162,8 +171,19 @@ export default function Home() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">
+          <div className="bg-gray-800 rounded-2xl p-8 w-full max-w-md relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2 className="text-2xl font-bold text-white mb-4">
               {modalType === 'buy' ? 'Buy Credits' : 'Withdraw Funds'}
             </h2>
 
@@ -171,7 +191,7 @@ export default function Home() {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded-lg px-4 py-3 mb-3"
+              className="w-full border border-gray-600 rounded-lg px-4 py-3 mb-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               placeholder="Amount (USD)"
             />
 
@@ -181,13 +201,23 @@ export default function Home() {
               <button
                 onClick={handleCreatePaymentLink}
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
+                className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
               >
-                Continue
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating Link...
+                  </>
+                ) : (
+                  'Continue'
+                )}
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 bg-gray-200 py-3 rounded-lg"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-black py-3 rounded-lg font-semibold transition"
               >
                 Cancel
               </button>
@@ -199,49 +229,54 @@ export default function Home() {
       {/* Transactions Modal */}
       {showTransactionsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-6xl max-h-[80vh] overflow-y-auto">
+          <div className="bg-gray-800 rounded-2xl p-8 w-full max-w-6xl max-h-[80vh] overflow-y-auto relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowTransactionsModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Buy Transactions</h2>
-              <button
-                onClick={() => setShowTransactionsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+              <h2 className="text-2xl font-bold text-white">Buy Transactions</h2>
             </div>
 
-            {transactionsLoading && <p className="text-center">Loading transactions...</p>}
+            {transactionsLoading && <p className="text-center text-white">Loading transactions...</p>}
 
             {transactionsError && <p className="text-red-600 text-center">{transactionsError}</p>}
 
             {!transactionsLoading && !transactionsError && transactions.length === 0 && (
-              <p className="text-center text-gray-500">No transactions found</p>
+              <p className="text-center text-gray-400">No transactions found</p>
             )}
 
             {!transactionsLoading && !transactionsError && transactions.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
+                <table className="w-full border-collapse border border-gray-600">
                   <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 px-4 py-2 text-left">Transaction ID</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">User ID</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Payment Method</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Receiving Amount</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                    <tr className="bg-gradient-to-r from-orange-600 to-red-600 text-white">
+                      <th className="border border-gray-600 px-4 py-2 text-left">Transaction ID</th>
+                      <th className="border border-gray-600 px-4 py-2 text-left">User ID</th>
+                      <th className="border border-gray-600 px-4 py-2 text-left">Payment Method</th>
+                      <th className="border border-gray-600 px-4 py-2 text-left">Date</th>
+                      <th className="border border-gray-600 px-4 py-2 text-left">Receiving Amount</th>
+                      <th className="border border-gray-600 px-4 py-2 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-2">{transaction.transactionId}</td>
-                        <td className="border border-gray-300 px-4 py-2">{transaction.userId}</td>
-                        <td className="border border-gray-300 px-4 py-2">{transaction.method}</td>
-                        <td className="border border-gray-300 px-4 py-2">
+                      <tr key={transaction.id} className="border-t border-gray-600 hover:bg-gray-700">
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.transactionId}</td>
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.userId}</td>
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.method}</td>
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">
                           {new Date(transaction.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2">${transaction.amount}</td>
-                        <td className="border border-gray-300 px-4 py-2">{transaction.status}</td>
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">${transaction.amount}</td>
+                        <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.status}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -268,13 +303,36 @@ function Icon() {
 }
 
 function ActionCard({ title, desc, gradient, onClick, loading }) {
+  const getIcon = () => {
+    if (title === "Buy Credits") {
+      return (
+        <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      )
+    } else if (title === "Withdraw") {
+      return (
+        <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v2" />
+        </svg>
+      )
+    } else if (title === "Transactions") {
+      return (
+        <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      )
+    }
+    return <Icon />
+  }
+
   return (
     <button
       onClick={onClick}
       disabled={loading}
       className={`rounded-2xl p-8 text-white shadow-xl bg-gradient-to-br ${gradient} hover:scale-105 transition`}
     >
-      <Icon />
+      {getIcon()}
       <h2 className="text-2xl font-bold mb-2 text-left">{title}</h2>
       <p className="text-sm opacity-90 text-left">{desc}</p>
     </button>

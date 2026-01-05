@@ -12,11 +12,11 @@ async function start() {
     await sequelize.authenticate()
     console.log('Database connected')
 
-    // Associations
+    
     User.belongsTo(Partner, { foreignKey: 'partner_code', targetKey: 'partner_code', as: 'partner', constraints: false })
     Partner.hasMany(User, { foreignKey: 'partner_code', sourceKey: 'partner_code', as: 'users', constraints: false })
 
-    await sequelize.sync({ alter: true }) // 👈 IMPORTANT
+    await sequelize.sync({ alter: true }) 
     console.log('Database synced')
 
     app.listen(PORT, () => {
