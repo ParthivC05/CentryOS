@@ -37,7 +37,8 @@ export async function createPaymentLink(user, paymentDetails = {}) {
         customUrlPath: urlPath,
         isOpenLink,
         acceptedPaymentOptions,
-        externalId: String(user.id)
+        externalId: String(user.id),
+        "customFields": ["Game Name", "Game Username"],
       },
       {
         headers: { Authorization: `Bearer ${token}` }
