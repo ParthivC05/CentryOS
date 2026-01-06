@@ -19,6 +19,8 @@ export default function Home() {
   const [totalTransactions, setTotalTransactions] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTab, setActiveTab] = useState('buy')
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentUrl, setPaymentUrl] = useState('')
   const limit = 10
 
   if (!token) {
@@ -119,8 +121,8 @@ export default function Home() {
       )
 
       if (response?.paymentLink?.url) {
-        window.open(response.paymentLink.url, '_blank')
-        setSuccessMsg('Link opened in new tab')
+        setPaymentUrl(response.paymentLink.url)
+        setShowPaymentModal(true)
         setShowModal(false)
       } else {
         setError('Failed to create payment link')
@@ -389,6 +391,32 @@ export default function Home() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full h-full max-w-7xl max-h-[90vh] bg-white rounded-lg overflow-hidden relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="absolute top-4 right-4 z-10 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition"
+              aria-label="Close payment modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Iframe */}
+            <iframe
+              src={paymentUrl}
+              className="w-full h-full border-0"
+              title="Payment Process"
+              allow="payment"
+            />
           </div>
         </div>
       )}
