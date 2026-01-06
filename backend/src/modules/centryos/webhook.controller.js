@@ -91,85 +91,23 @@ export async function centryOsWebhook(req, res) {
       transactionId: p.transactionId,
       paymentLink: p.paymentLink || null,
       feeCharged: p.feeCharged || null,
-      metadata: p.metadata || null,
       rawPayload: payload
     }
 
-
-    let user = null
-
-    if (eventType === 'WITHDRAWAL') {
-      // For withdrawals, use paymentLink.externalId directly as userId
-      if (p.paymentLink && p.paymentLink.externalId) {
-        record.userId = p.paymentLink.externalId
-        console.info('[CENTRYOS_WEBHOOK] Withdrawal user associated via paymentLink externalId', {
-          requestId,
-          userId: record.userId,
-          externalId: p.paymentLink.externalId
-        })
-      } else {
-        console.warn('[CENTRYOS_WEBHOOK] No externalId found for withdrawal', {
-          requestId,
-          transactionId: record.transactionId
-        })
-      }
+    // Set userId to paymentLink.externalId for both event types
+    if (p.paymentLink && p.paymentLink.externalId) {
+      record.userId = p.paymentLink.externalId
+      console.info('[CENTRYOS_WEBHOOK] User associated via paymentLink externalId', {
+        requestId,
+        userId: record.userId,
+        eventType
+      })
     } else {
-      // For COLLECTION (buy) transactions, keep existing logic
-      // First try to find user by paymentLink.externalId
-      if (p.paymentLink && p.paymentLink.externalId) {
-        user = await User.findByPk(p.paymentLink.externalId)
-        if (user) {
-          record.userId = user.id
-          console.info('[CENTRYOS_WEBHOOK] User associated via paymentLink externalId', {
-            requestId,
-            userId: user.id,
-            email: user.email,
-            externalId: p.paymentLink.externalId
-          })
-        }
-      }
-
-      // Fallback to metadata.userId if externalId didn't work
-      if (!user && p.metadata && p.metadata.userId) {
-        user = await User.findByPk(p.metadata.userId)
-        if (user) {
-          record.userId = user.id
-          console.info('[CENTRYOS_WEBHOOK] User associated via metadata', {
-            requestId,
-            userId: user.id,
-            email: user.email
-          })
-        }
-      }
-
-      // Fallback to entityId/walletId lookup if metadata didn't work
-      if (!user) {
-        user = await User.findOne({
-          where: {
-            [Op.or]: [
-              { centryos_entity_id: record.entityId },
-              { centryos_wallet_id: record.walletId }
-            ]
-          }
-        })
-
-        if (user) {
-          record.userId = user.id
-          console.info('[CENTRYOS_WEBHOOK] User associated via entity/wallet', {
-            requestId,
-            userId: user.id,
-            email: user.email
-          })
-        } else {
-          console.warn('[CENTRYOS_WEBHOOK] No user association found', {
-            requestId,
-            entityId: record.entityId,
-            walletId: record.walletId,
-            metadataUserId: p.metadata?.userId,
-            externalId: p.paymentLink?.externalId
-          })
-        }
-      }
+      console.warn('[CENTRYOS_WEBHOOK] No externalId found', {
+        requestId,
+        transactionId: record.transactionId,
+        eventType
+      })
     }
 
 
