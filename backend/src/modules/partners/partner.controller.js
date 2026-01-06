@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { Partner } from './partner.model.js'
 import { User } from '../users/user.model.js'
 import { Transaction } from '../payments/payment.model.js'
+import { Op } from 'sequelize'
 
 export async function addPartner(req, res) {
   const { partnerCode, name, email, password, role = 'PARTNER' } = req.body
@@ -163,7 +164,7 @@ export async function getUsersByPartnerCode(req, res) {
 
 export async function getPartnerTransactions(req, res) {
   const partnerCode = req.user.partnerCode
-  const { eventType } = req.query
+  const { eventType, limit = 20, offset = 0 } = req.query
 
   if (!partnerCode) {
     return res.status(400).json({ message: 'Partner code not found in token' })
@@ -173,28 +174,57 @@ export async function getPartnerTransactions(req, res) {
     // First get all users for this partner
     const users = await User.findAll({
       where: { partner_code: partnerCode },
-      attributes: ['id']
+      attributes: ['id', 'centryos_entity_id']
     })
 
-    const userIds = users.map(user => user.id)
+    const userIds = users.map(user => user.id.toString())
+    const entityIds = users.map(user => user.centryos_entity_id)
 
-    // Then get transactions for these users
+    // Build where clause for transactions
+    const where = {
+      [Op.or]: [
+        { eventType: 'COLLECTION', userId: userIds },
+        { eventType: 'WITHDRAWAL', userId: entityIds }
+      ]
+    }
+
+    if (eventType) where.eventType = eventType
+
     const transactions = await Transaction.findAll({
-      where: {
-        userId: userIds,
-        ...(eventType && { eventType })
-      },
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['email']
-      }],
-      order: [['createdAt', 'DESC']]
+      where,
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType'],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset: Number(offset)
     })
+
+    // Populate user data for each transaction
+    const transactionsWithUsers = await Promise.all(
+      transactions.map(async (transaction) => {
+        let user = null
+        if (transaction.eventType === 'COLLECTION') {
+          // For COLLECTION, userId is the user.id (integer as string)
+          user = await User.findByPk(parseInt(transaction.userId))
+        } else if (transaction.eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL, userId is the centryos_entity_id (string)
+          user = await User.findOne({ where: { centryos_entity_id: transaction.userId } })
+        }
+        return {
+          ...transaction.toJSON(),
+          userId: transaction.eventType === 'WITHDRAWAL' && user ? user.id : transaction.userId,
+          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null
+        }
+      })
+    )
+
+    const count = await Transaction.count({ where })
 
     res.json({
       success: true,
-      data: transactions
+      data: transactionsWithUsers,
+      total: count,
+      limit: Number(limit),
+      offset: Number(offset)
     })
   } catch (error) {
     console.error('Get partner transactions error:', error.message)

@@ -8,10 +8,13 @@ export default function PartnerDashboard() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState('users')
   const [transactionTab, setTransactionTab] = useState('buy')
+  const [currentTransactionPage, setCurrentTransactionPage] = useState(1)
+  const [totalTransactions, setTotalTransactions] = useState(0)
+  const [transactionLimit] = useState(20)
 
   useEffect(() => {
     fetchData()
-  }, [currentPage, transactionTab])
+  }, [currentPage, transactionTab, currentTransactionPage])
 
   const fetchData = async () => {
     setLoading(true)
@@ -20,9 +23,14 @@ export default function PartnerDashboard() {
         const res = await getUsersByPartner()
         setUsers(res.users || [])
       } else if (currentPage === 'transactions') {
-        const params = transactionTab === 'buy' ? { eventType: 'COLLECTION' } : { eventType: 'WITHDRAWAL' }
+        const params = {
+          eventType: transactionTab === 'buy' ? 'COLLECTION' : 'WITHDRAWAL',
+          limit: transactionLimit,
+          offset: (currentTransactionPage - 1) * transactionLimit
+        }
         const res = await getPartnerTransactions(params)
         setTransactions(res.data || [])
+        setTotalTransactions(res.total || 0)
       }
     } catch (error) {
       Swal.fire('Error', `Failed to fetch ${currentPage}`, 'error')
@@ -30,6 +38,17 @@ export default function PartnerDashboard() {
       setLoading(false)
     }
   }
+
+  const handleTransactionTabChange = (tab) => {
+    setTransactionTab(tab)
+    setCurrentTransactionPage(1) // Reset to first page when switching tabs
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentTransactionPage(page)
+  }
+
+  const totalPages = Math.ceil(totalTransactions / transactionLimit)
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -106,7 +125,7 @@ export default function PartnerDashboard() {
             {currentPage === 'transactions' && (
               <div className="flex gap-2 px-6 py-4 border-b border-white/20">
                 <button
-                  onClick={() => setTransactionTab('buy')}
+                  onClick={() => handleTransactionTabChange('buy')}
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'buy'
                       ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
@@ -116,7 +135,7 @@ export default function PartnerDashboard() {
                   Buy Transactions
                 </button>
                 <button
-                  onClick={() => setTransactionTab('redeem')}
+                  onClick={() => handleTransactionTabChange('redeem')}
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'redeem'
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white'
@@ -172,7 +191,7 @@ export default function PartnerDashboard() {
                         </td>
                       </tr>
                     ))}
-                  {currentPage === 'transactions' && transactionTab === 'buy' && transactions.map((t, i) => (
+                  {currentPage === 'transactions' && transactions.map((t, i) => (
                     <tr
                       key={t.id}
                       className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
@@ -193,13 +212,6 @@ export default function PartnerDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {currentPage === 'transactions' && transactionTab === 'redeem' && (
-                    <tr>
-                      <td colSpan="8" className="px-4 py-12 text-center text-gray-400">
-                        This feature is coming soon
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
 
               </table>
