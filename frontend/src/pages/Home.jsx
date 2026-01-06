@@ -130,7 +130,7 @@ export default function Home() {
 
             {/* Buy */}
             <ActionCard
-              title="Buy Credits"
+              title="Buy Sweeps Credits"
               desc="Purchase credits to use in your account"
               gradient="from-green-600 to-emerald-700"
               onClick={handleBuyClick}
@@ -184,7 +184,7 @@ export default function Home() {
             </button>
 
             <h2 className="text-2xl font-bold text-white mb-4">
-              {modalType === 'buy' ? 'Buy Credits' : 'Withdraw Funds'}
+              {modalType === 'buy' ? 'Buy Sweeps Credits' : 'Withdraw Funds'}
             </h2>
 
             <input
@@ -304,7 +304,7 @@ function Icon() {
 
 function ActionCard({ title, desc, gradient, onClick, loading }) {
   const getIcon = () => {
-    if (title === "Buy Credits") {
+    if (title === "Buy Sweeps Credits") {
       return (
         <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

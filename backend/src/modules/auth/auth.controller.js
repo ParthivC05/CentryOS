@@ -58,7 +58,7 @@ export async function signup(req, res) {
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: process.env.SESSION_TIMEOUT  }
     )
 
     res.status(201).json({
@@ -111,7 +111,7 @@ export async function login(req, res) {
   const token = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: process.env.SESSION_TIMEOUT  }
   )
 
   res.json({
@@ -144,7 +144,7 @@ export async function adminLogin(req, res) {
   const token = jwt.sign(
     { userId: user.id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: process.env.SESSION_TIMEOUT  }
   )
 
   res.json({

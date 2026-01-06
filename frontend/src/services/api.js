@@ -12,6 +12,12 @@ const api = {
       body: JSON.stringify(payload)
     })
 
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+      throw new Error('Session expired. Please login again.')
+    }
+
     if (!res.ok) {
       const err = await res.json()
       throw new Error(err.message || 'Request failed')
@@ -29,6 +35,12 @@ const api = {
         ...(token && { Authorization: `Bearer ${token}` })
       }
     })
+
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+      throw new Error('Session expired. Please login again.')
+    }
 
     if (!res.ok) {
       const err = await res.json()
