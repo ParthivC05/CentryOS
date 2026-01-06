@@ -1,6 +1,7 @@
 import { User } from '../users/user.model.js'
 import { createPaymentLink } from './payment.service.js'
 import { Transaction } from './payment.model.js'
+import { Op } from 'sequelize'
 
 export async function createPayIn(req, res) {
   try {
@@ -101,7 +102,21 @@ export async function getUserTransactions(req, res) {
   try {
     const userId = req.user.userId
     const { eventType, status, limit = 20, offset = 0 } = req.query
-    const where = { userId }
+
+    // Get the user to access their centryos_entity_id
+    const user = await User.findByPk(userId)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    // Build where clause: COLLECTION transactions where userId = user.id (integer)
+    // WITHDRAWAL transactions where userId = user.centryos_entity_id (string)
+    const where = {
+      [Op.or]: [
+        { eventType: 'COLLECTION', userId: user.id.toString() },
+        { eventType: 'WITHDRAWAL', userId: user.centryos_entity_id }
+      ]
+    }
 
     if (eventType) where.eventType = eventType
     if (status) where.status = status

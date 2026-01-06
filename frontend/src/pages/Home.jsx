@@ -14,6 +14,10 @@ export default function Home() {
   const [transactions, setTransactions] = useState([])
   const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [transactionsError, setTransactionsError] = useState(null)
+  const [totalTransactions, setTotalTransactions] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [activeTab, setActiveTab] = useState('buy')
+  const limit = 10
 
   if (!token) {
     window.location.href = '/login'
@@ -42,15 +46,19 @@ export default function Home() {
     // })
   }
 
-  const handleTransactionsClick = async () => {
-    setShowTransactionsModal(true)
+  const fetchTransactions = async (page = 1, eventType = null) => {
     setTransactionsError(null)
     setTransactionsLoading(true)
 
     try {
-      const response = await api.get('/payments/my-transactions?eventType=COLLECTION')
+      const offset = (page - 1) * limit
+      let url = `/payments/my-transactions?limit=${limit}&offset=${offset}`
+      if (eventType) url += `&eventType=${eventType}`
+      const response = await api.get(url)
       if (response.success) {
         setTransactions(response.data)
+        setTotalTransactions(response.total)
+        setCurrentPage(page)
       } else {
         setTransactionsError('Failed to fetch transactions')
       }
@@ -59,6 +67,24 @@ export default function Home() {
     } finally {
       setTransactionsLoading(false)
     }
+  }
+
+  const handleTransactionsClick = async () => {
+    setShowTransactionsModal(true)
+    setActiveTab('buy')
+    await fetchTransactions(1, 'COLLECTION')
+  }
+
+  const handlePageChange = async (page) => {
+    const eventType = activeTab === 'buy' ? 'COLLECTION' : 'WITHDRAWAL'
+    await fetchTransactions(page, eventType)
+  }
+
+  const handleTabChange = async (tab) => {
+    setActiveTab(tab)
+    setCurrentPage(1)
+    const eventType = tab === 'all' ? null : tab === 'buy' ? 'COLLECTION' : 'WITHDRAWAL'
+    await fetchTransactions(1, eventType)
   }
 
   const handleCreatePaymentLink = async () => {
@@ -241,8 +267,26 @@ export default function Home() {
               </svg>
             </button>
 
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Buy Transactions</h2>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white mb-4">Transactions</h2>
+              <div className="flex space-x-1 bg-gray-700 p-1 rounded-lg">
+                <button
+                  onClick={() => handleTabChange('buy')}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${
+                    activeTab === 'buy' ? 'bg-orange-600 text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={() => handleTabChange('withdraw')}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${
+                    activeTab === 'withdraw' ? 'bg-orange-600 text-white' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  Withdraw
+                </button>
+              </div>
             </div>
 
             {transactionsLoading && <p className="text-center text-white">Loading transactions...</p>}
@@ -281,6 +325,29 @@ export default function Home() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalTransactions > limit && (
+              <div className="flex justify-center items-center mt-6 space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition"
+                >
+                  Previous
+                </button>
+                <span className="text-white">
+                  Page {currentPage} of {Math.ceil(totalTransactions / limit)}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(totalTransactions / limit)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition"
+                >
+                  Next
+                </button>
               </div>
             )}
           </div>
