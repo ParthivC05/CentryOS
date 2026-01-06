@@ -3,7 +3,7 @@ import { createPayoutLink } from './payout.service.js'
 
 export async function createPayout(req, res) {
   try {
-    const { amount } = req.body
+    const { amount, gameName, gameUsername } = req.body
     const user = await User.findByPk(req.user.userId)
 
     if (!user) {
@@ -25,7 +25,7 @@ export async function createPayout(req, res) {
       return res.status(400).json({ success: false, message: 'Minimum withdrawal amount is $10' })
     }
 
-    const payoutLink = await createPayoutLink(user, amt)
+    const payoutLink = await createPayoutLink(user, amt, {}, gameName, gameUsername)
 
     return res.status(201).json({
       success: true,

@@ -9,6 +9,8 @@ export default function Home() {
   const [successMsg, setSuccessMsg] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [amount, setAmount] = useState('0')
+  const [gameName, setGameName] = useState('')
+  const [gameUsername, setGameUsername] = useState('')
   const [modalType, setModalType] = useState('buy')
   const [showTransactionsModal, setShowTransactionsModal] = useState(false)
   const [transactions, setTransactions] = useState([])
@@ -38,6 +40,8 @@ export default function Home() {
     setError(null)
     setSuccessMsg(null)
     setAmount('0')
+    setGameName('')
+    setGameUsername('')
     // Swal.fire({
     //   title: 'Coming Soon',
     //   text: 'This feature will come soon',
@@ -94,13 +98,24 @@ export default function Home() {
     if (modalType === 'buy' && amt <= 0) return setError('Amount must be greater than 0')
     if (modalType === 'redeem' && amt < 10) return setError('Minimum withdrawal is $10')
 
+    if (modalType === 'redeem') {
+      if (!gameName.trim()) return setError('Game Name is required')
+      if (!gameUsername.trim()) return setError('Game Username is required')
+    }
+
     try {
       setLoading(true)
       setError(null)
 
+      const requestBody = { amount: amt, currency: 'USD' }
+      if (modalType === 'redeem') {
+        requestBody.gameName = gameName.trim()
+        requestBody.gameUsername = gameUsername.trim()
+      }
+
       const response = await api.post(
         modalType === 'buy' ? '/payments/payin' : '/payments/payout',
-        { amount: amt, currency: 'USD' }
+        requestBody
       )
 
       if (response?.paymentLink?.url) {
@@ -220,6 +235,26 @@ export default function Home() {
               className="w-full border border-gray-600 rounded-lg px-4 py-3 mb-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
               placeholder="Amount (USD)"
             />
+
+            {modalType === 'redeem' && (
+              <>
+                <input
+                  type="text"
+                  value={gameName}
+                  onChange={(e) => setGameName(e.target.value)}
+                  className="w-full border border-gray-600 rounded-lg px-4 py-3 mb-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                  placeholder="Game Name"
+                />
+
+                <input
+                  type="text"
+                  value={gameUsername}
+                  onChange={(e) => setGameUsername(e.target.value)}
+                  className="w-full border border-gray-600 rounded-lg px-4 py-3 mb-3 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                  placeholder="Game Username"
+                />
+              </>
+            )}
 
             {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { getCentryOsToken } from '../centryos/token.service.js'
 
-export async function createPayoutLink(user, amount, options = {}) {
+export async function createPayoutLink(user, amount, options = {}, gameName, gameUsername) {
   try {
     const token = await getCentryOsToken()
 
@@ -30,15 +30,26 @@ export async function createPayoutLink(user, amount, options = {}) {
       extra.amount = amount
     }
 
+    // Build request body with customData at top level
+    const requestBody = {
+      tokenType: 'ACCOUNT_WIDGET',
+      currency,
+      expiredAt,
+      redirectTo,
+      extra
+    }
+
+    // Add custom data at top level if provided
+    if (gameName && gameUsername) {
+      requestBody.customData = {
+        "Game Name": gameName,
+        "Game Username": gameUsername
+      }
+    }
+
     const res = await axios.post(
       `${process.env.CENTRYOS_LIQUIDITY_BASE_URL}/v1/ext/application-token`,
-      {
-        tokenType: 'ACCOUNT_WIDGET',
-        currency,
-        expiredAt,
-        redirectTo,
-        extra
-      },
+      requestBody,
       {
         headers: { Authorization: `Bearer ${token}` }
       }
