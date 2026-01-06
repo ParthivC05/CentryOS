@@ -48,12 +48,13 @@ export async function getTransactions(req, res) {
 
     const transactions = await Transaction.findAll({
       where,
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType', 'rawPayload', 'paymentLink'],
       order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset: Number(offset)
     })
 
-    // Populate user data for each transaction
+    // Populate user data and game data for each transaction
     const transactionsWithUsers = await Promise.all(
       transactions.map(async (transaction) => {
         let user = null
@@ -64,9 +65,32 @@ export async function getTransactions(req, res) {
           // For WITHDRAWAL, userId is the centryos_entity_id (string)
           user = await User.findOne({ where: { centryos_entity_id: transaction.userId } })
         }
+
+        // Extract game name and game username from transaction data
+        let gameName = null
+        let gameUsername = null
+
+        if (transaction.eventType === 'COLLECTION') {
+          // For COLLECTION events, game data is in rawPayload.payload.metadata
+          const metadata = transaction.rawPayload?.payload?.metadata
+          if (metadata) {
+            gameName = metadata['Game Name'] || null
+            gameUsername = metadata['Game Username'] || null
+          }
+        } else if (transaction.eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL events, game data is in paymentLink.customData
+          const customData = transaction.paymentLink?.customData
+          if (customData) {
+            gameName = customData['Game Name'] || null
+            gameUsername = customData['Game Username'] || null
+          }
+        }
+
         return {
           ...transaction.toJSON(),
-          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null
+          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null,
+          gameName,
+          gameUsername
         }
       })
     )
@@ -141,16 +165,46 @@ export async function getUserTransactions(req, res) {
 
     const transactions = await Transaction.findAll({
       where,
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType', 'rawPayload', 'paymentLink'],
       order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset: Number(offset)
+    })
+
+    // Extract game name and game username from transaction data
+    const transactionsWithGameData = transactions.map(transaction => {
+      const transactionData = transaction.toJSON()
+      let gameName = null
+      let gameUsername = null
+
+      if (transactionData.eventType === 'COLLECTION') {
+        // For COLLECTION events, game data is in rawPayload.payload.metadata
+        const metadata = transactionData.rawPayload?.payload?.metadata
+        if (metadata) {
+          gameName = metadata['Game Name'] || null
+          gameUsername = metadata['Game Username'] || null
+        }
+      } else if (transactionData.eventType === 'WITHDRAWAL') {
+        // For WITHDRAWAL events, game data is in paymentLink.customData
+        const customData = transactionData.paymentLink?.customData
+        if (customData) {
+          gameName = customData['Game Name'] || null
+          gameUsername = customData['Game Username'] || null
+        }
+      }
+
+      return {
+        ...transactionData,
+        gameName,
+        gameUsername
+      }
     })
 
     const count = await Transaction.count({ where })
 
     res.status(200).json({
       success: true,
-      data: transactions,
+      data: transactionsWithGameData,
       total: count,
       limit: Number(limit),
       offset: Number(offset)

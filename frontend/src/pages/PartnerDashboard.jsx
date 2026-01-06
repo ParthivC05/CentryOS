@@ -160,7 +160,7 @@ export default function PartnerDashboard() {
                         {h}
                       </th>
                     ))}
-                    {currentPage === 'transactions' && ['ID', 'Transaction ID', 'User ID', 'User Email', 'Payment Method', 'Amount', 'Status', 'Date'].map(h => (
+                    {currentPage === 'transactions' && ['ID', 'Transaction ID', 'User ID', 'User Email', 'Payment Method', 'Amount', 'Status', 'Game Name', 'Game Username', 'Date'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left whitespace-nowrap"
@@ -207,6 +207,12 @@ export default function PartnerDashboard() {
                       <td className="px-4 py-3 text-gray-300">{t.method}</td>
                       <td className="px-4 py-3 text-gray-300">${t.amount}</td>
                       <td className="px-4 py-3 text-gray-300">{t.status}</td>
+                      <td className="px-4 py-3 text-gray-400 truncate max-w-[150px]">
+                        {t.gameName || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 truncate max-w-[150px]">
+                        {t.gameUsername || '-'}
+                      </td>
                       <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                         {new Date(t.createdAt).toLocaleDateString()}
                       </td>

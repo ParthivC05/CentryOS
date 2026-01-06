@@ -218,7 +218,7 @@ const handleLogout = () => {
                         {h}
                       </th>
                     ))}
-                    {currentPage === 'transactions' && ["ID", "Transaction ID", "User ID", "User Email", "Payment Method", "Amount", "Status", "Date"].map(h => (
+                    {currentPage === 'transactions' && ["ID", "Transaction ID", "User ID", "User Email", "Game Name", "Game Username", "Payment Method", "Amount", "Status", "Date"].map(h => (
                       <th key={h} className="px-4 py-3 text-left whitespace-nowrap">
                         {h}
                       </th>
@@ -285,6 +285,12 @@ const handleLogout = () => {
                       <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
                         {t.user?.email}
                       </td>
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
+                        {t.gameName || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
+                        {t.gameUsername || '-'}
+                      </td>
                       <td className="px-4 py-3 text-blue-300">{t.method}</td>
                       <td className="px-4 py-3 text-blue-300">${t.amount}</td>
                       <td className="px-4 py-3 text-blue-300">{t.status}</td>
@@ -305,6 +311,12 @@ const handleLogout = () => {
                       <td className="px-4 py-3 text-blue-300">{t.userId}</td>
                       <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
                         {t.user?.email}
+                      </td>
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
+                        {t.gameName || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-blue-300 truncate max-w-[160px]">
+                        {t.gameUsername || '-'}
                       </td>
                       <td className="px-4 py-3 text-blue-300">{t.method}</td>
                       <td className="px-4 py-3 text-blue-300">${t.amount}</td>

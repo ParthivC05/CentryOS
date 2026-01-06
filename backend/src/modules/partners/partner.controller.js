@@ -192,13 +192,13 @@ export async function getPartnerTransactions(req, res) {
 
     const transactions = await Transaction.findAll({
       where,
-      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType'],
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType', 'rawPayload', 'paymentLink'],
       order: [['createdAt', 'DESC']],
       limit: Number(limit),
       offset: Number(offset)
     })
 
-    // Populate user data for each transaction
+    // Populate user data and game data for each transaction
     const transactionsWithUsers = await Promise.all(
       transactions.map(async (transaction) => {
         let user = null
@@ -209,10 +209,33 @@ export async function getPartnerTransactions(req, res) {
           // For WITHDRAWAL, userId is the centryos_entity_id (string)
           user = await User.findOne({ where: { centryos_entity_id: transaction.userId } })
         }
+
+        // Extract game name and game username from transaction data
+        let gameName = null
+        let gameUsername = null
+
+        if (transaction.eventType === 'COLLECTION') {
+          // For COLLECTION events, game data is in rawPayload.payload.metadata
+          const metadata = transaction.rawPayload?.payload?.metadata
+          if (metadata) {
+            gameName = metadata['Game Name'] || null
+            gameUsername = metadata['Game Username'] || null
+          }
+        } else if (transaction.eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL events, game data is in paymentLink.customData
+          const customData = transaction.paymentLink?.customData
+          if (customData) {
+            gameName = customData['Game Name'] || null
+            gameUsername = customData['Game Username'] || null
+          }
+        }
+
         return {
           ...transaction.toJSON(),
           userId: transaction.eventType === 'WITHDRAWAL' && user ? user.id : transaction.userId,
-          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null
+          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null,
+          gameName,
+          gameUsername
         }
       })
     )
