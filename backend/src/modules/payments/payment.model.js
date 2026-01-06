@@ -33,8 +33,8 @@ const Transaction = sequelize.define('CentryTransaction', {
   timestamps: true
 })
 
-// Note: Removed foreign key association since userId can now be either
+// Define association without foreign key constraint since userId can be either
 // an integer (actual user ID) or string (external ID for withdrawals)
-// Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' })
+Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user', constraints: false })
 
 export { Transaction }

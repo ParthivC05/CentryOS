@@ -44,7 +44,7 @@ export async function getTransactions(req, res) {
 
     if (eventType) where.eventType = eventType
     if (status) where.status = status
-    if (userId) where.userId = Number(userId)
+    if (userId) where.userId = userId
 
     const transactions = await Transaction.findAll({
       where,
@@ -53,11 +53,29 @@ export async function getTransactions(req, res) {
       offset: Number(offset)
     })
 
+    // Populate user data for each transaction
+    const transactionsWithUsers = await Promise.all(
+      transactions.map(async (transaction) => {
+        let user = null
+        if (transaction.eventType === 'COLLECTION') {
+          // For COLLECTION, userId is the user.id (integer as string)
+          user = await User.findByPk(parseInt(transaction.userId))
+        } else if (transaction.eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL, userId is the centryos_entity_id (string)
+          user = await User.findOne({ where: { centryos_entity_id: transaction.userId } })
+        }
+        return {
+          ...transaction.toJSON(),
+          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null
+        }
+      })
+    )
+
     const count = await Transaction.count({ where })
 
     res.status(200).json({
       success: true,
-      data: transactions,
+      data: transactionsWithUsers,
       total: count,
       limit: Number(limit),
       offset: Number(offset)

@@ -303,7 +303,7 @@ export default function Home() {
                   <thead>
                     <tr className="bg-gradient-to-r from-orange-600 to-red-600 text-white">
                       <th className="border border-gray-600 px-4 py-2 text-left">Transaction ID</th>
-                      <th className="border border-gray-600 px-4 py-2 text-left">User ID</th>
+                      {/* <th className="border border-gray-600 px-4 py-2 text-left">User ID</th> */}
                       <th className="border border-gray-600 px-4 py-2 text-left">Payment Method</th>
                       <th className="border border-gray-600 px-4 py-2 text-left">Date</th>
                       <th className="border border-gray-600 px-4 py-2 text-left">Receiving Amount</th>
@@ -314,7 +314,7 @@ export default function Home() {
                     {transactions.map((transaction) => (
                       <tr key={transaction.id} className="border-t border-gray-600 hover:bg-gray-700">
                         <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.transactionId}</td>
-                        <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.userId}</td>
+                        {/* <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.userId}</td> */}
                         <td className="border border-gray-600 px-4 py-2 text-gray-300">{transaction.method}</td>
                         <td className="border border-gray-600 px-4 py-2 text-gray-300">
                           {new Date(transaction.createdAt).toLocaleDateString()}

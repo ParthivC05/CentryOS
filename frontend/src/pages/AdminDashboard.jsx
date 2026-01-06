@@ -10,6 +10,9 @@ export default function AdminDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('partners');
   const [transactionTab, setTransactionTab] = useState('buy');
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [totalTransactions, setTotalTransactions] = useState(0);
+  const limit = 10;
   const [formData, setFormData] = useState({
     partnerCode: "",
     name: "",
@@ -19,7 +22,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, transactionTab]);
+  }, [currentPage, transactionTab, transactionPage]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -31,9 +34,11 @@ export default function AdminDashboard() {
         const res = await getAllUsers();
         setUsers(res.users || []);
       } else if (currentPage === 'transactions') {
-        const params = transactionTab === 'buy' ? { eventType: 'COLLECTION' } : { eventType: 'WITHDRAWAL' };
+        const offset = (transactionPage - 1) * limit;
+        const params = transactionTab === 'buy' ? { eventType: 'COLLECTION', limit, offset } : { eventType: 'WITHDRAWAL', limit, offset };
         const res = await getAllTransactions(params);
         setTransactions(res.data || []);
+        setTotalTransactions(res.total || 0);
       }
     } catch (error) {
       Swal.fire("Error", `Failed to fetch ${currentPage}`, "error");
@@ -170,7 +175,10 @@ const handleLogout = () => {
             {currentPage === 'transactions' && (
               <div className="flex gap-2 px-6 py-4 border-b border-white/20">
                 <button
-                  onClick={() => setTransactionTab('buy')}
+                  onClick={() => {
+                    setTransactionTab('buy');
+                    setTransactionPage(1);
+                  }}
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'buy'
                       ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
@@ -180,7 +188,10 @@ const handleLogout = () => {
                   Buy Transactions
                 </button>
                 <button
-                  onClick={() => setTransactionTab('redeem')}
+                  onClick={() => {
+                    setTransactionTab('redeem');
+                    setTransactionPage(1);
+                  }}
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     transactionTab === 'redeem'
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white'
@@ -282,13 +293,27 @@ const handleLogout = () => {
                       </td>
                     </tr>
                   ))}
-                  {currentPage === 'transactions' && transactionTab === 'redeem' && (
-                    <tr>
-                      <td colSpan="8" className="px-4 py-12 text-center text-gray-400">
-                        This feature is coming soon
+                  {currentPage === 'transactions' && transactionTab === 'redeem' && transactions.map((t, i) => (
+                    <tr
+                      key={t.id}
+                      className={`border-t border-white/10 ${i % 2 === 0 ? "bg-white/5" : ""}`}
+                    >
+                      <td className="px-4 py-3 text-blue-300">{t.id}</td>
+                      <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
+                        {t.transactionId}
+                      </td>
+                      <td className="px-4 py-3 text-blue-300">{t.userId}</td>
+                      <td className="px-4 py-3 text-slate-400 truncate max-w-[220px]">
+                        {t.user?.email}
+                      </td>
+                      <td className="px-4 py-3 text-blue-300">{t.method}</td>
+                      <td className="px-4 py-3 text-blue-300">${t.amount}</td>
+                      <td className="px-4 py-3 text-blue-300">{t.status}</td>
+                      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                        {new Date(t.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -306,6 +331,34 @@ const handleLogout = () => {
             {currentPage === 'transactions' && transactionTab === 'buy' && transactions.length === 0 && (
               <div className="py-12 text-center text-gray-400">
                 No buy transactions found
+              </div>
+            )}
+            {currentPage === 'transactions' && transactionTab === 'redeem' && transactions.length === 0 && (
+              <div className="py-12 text-center text-gray-400">
+                No redeem transactions found
+              </div>
+            )}
+
+            {/* Pagination */}
+            {currentPage === 'transactions' && totalTransactions > limit && (
+              <div className="flex justify-center items-center gap-4 px-6 py-4 border-t border-white/20">
+                <button
+                  onClick={() => setTransactionPage(Math.max(1, transactionPage - 1))}
+                  disabled={transactionPage === 1}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Previous
+                </button>
+                <span className="text-white">
+                  Page {transactionPage} of {Math.ceil(totalTransactions / limit)}
+                </span>
+                <button
+                  onClick={() => setTransactionPage(Math.min(Math.ceil(totalTransactions / limit), transactionPage + 1))}
+                  disabled={transactionPage === Math.ceil(totalTransactions / limit)}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Next
+                </button>
               </div>
             )}
           </div>

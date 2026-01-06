@@ -213,23 +213,44 @@ export async function getAllTransactions(req, res) {
   }
 
   try {
-    const { eventType } = req.query
+    const { eventType, limit = 20, offset = 0 } = req.query
     const whereClause = eventType ? { eventType } : {}
 
     const transactions = await Transaction.findAll({
       where: whereClause,
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['email']
-      }],
-      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt'],
-      order: [['createdAt', 'DESC']]
+      attributes: ['id', 'transactionId', 'userId', 'method', 'amount', 'status', 'createdAt', 'eventType'],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset: Number(offset)
     })
+
+    // Populate user data for each transaction
+    const transactionsWithUsers = await Promise.all(
+      transactions.map(async (transaction) => {
+        let user = null
+        if (transaction.eventType === 'COLLECTION') {
+          // For COLLECTION, userId is the user.id (integer as string)
+          user = await User.findByPk(parseInt(transaction.userId))
+        } else if (transaction.eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL, userId is the centryos_entity_id (string)
+          user = await User.findOne({ where: { centryos_entity_id: transaction.userId } })
+        }
+        return {
+          ...transaction.toJSON(),
+          userId: transaction.eventType === 'WITHDRAWAL' && user ? user.id : transaction.userId,
+          user: user ? { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name } : null
+        }
+      })
+    )
+
+    const count = await Transaction.count({ where: whereClause })
 
     res.json({
       success: true,
-      data: transactions
+      data: transactionsWithUsers,
+      total: count,
+      limit: Number(limit),
+      offset: Number(offset)
     })
   } catch (error) {
     console.error('Get all transactions error:', error.message)
