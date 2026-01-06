@@ -23,11 +23,11 @@ const Transaction = sequelize.define('CentryTransaction', {
   transactionId: {
     type: DataTypes.STRING,
     unique: true
-  },
+  },  
   paymentLink: DataTypes.JSON,
   feeCharged: DataTypes.STRING,
   rawPayload: DataTypes.JSON,
-  userId: DataTypes.INTEGER
+  userId: DataTypes.STRING
 }, {
   tableName: 'centryos_transactions',
   timestamps: true
