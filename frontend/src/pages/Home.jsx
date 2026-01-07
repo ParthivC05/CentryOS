@@ -398,7 +398,7 @@ export default function Home() {
       {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="w-full h-full max-w-7xl max-h-[90vh] bg-white rounded-lg overflow-hidden relative">
+          <div className="w-full h-full max-w-7xl max-h-[90vh] bg-white rounded-md overflow-hidden relative">
             {/* Close Button */}
             <button
               onClick={() => setShowPaymentModal(false)}
@@ -410,16 +410,19 @@ export default function Home() {
               </svg>
             </button>
 
-            {/* Iframe */}
-            <iframe
-              src={paymentUrl}
-              className="w-full h-full border-0"
-              title="Payment Process"
-              allow="payment"
-            />
-          </div>
-        </div>
-      )}
+      {/* Iframe */}
+      <iframe
+        src={paymentUrl}
+        className="w-full h-full border-0"
+        title="Payment Process"
+        allow="payment"
+      />
+
+      {/* Black overlay to hide brand */}
+      <div className="absolute bottom-0 left-0 right-0 h-[45px] bg-black"></div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
