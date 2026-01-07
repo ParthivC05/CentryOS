@@ -163,12 +163,20 @@ export async function getAllPartners(req, res) {
   }
 
   try {
+    const { limit = 20, offset = 0 } = req.query
     const partners = await Partner.findAll({
-      attributes: ['id', 'partner_code', 'name', 'email', 'createdAt', 'updatedAt']
+      attributes: ['id', 'partner_code', 'name', 'email', 'createdAt', 'updatedAt'],
+      limit: Number(limit),
+      offset: Number(offset),
+      order: [['createdAt', 'DESC']]
     })
+    const total = await Partner.count()
     res.json({
       success: true,
-      partners
+      partners,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
     })
   } catch (error) {
     console.error('Get all partners error:', error.message)
@@ -185,6 +193,7 @@ export async function getAllUsers(req, res) {
   }
 
   try {
+    const { limit = 20, offset = 0 } = req.query
     const users = await User.findAll({
       attributes: ['id', 'first_name', 'last_name', 'email', 'partner_code', 'createdAt', 'updatedAt'],
       include: [{
@@ -192,11 +201,18 @@ export async function getAllUsers(req, res) {
         as: 'partner',
         attributes: ['name', 'partner_code'],
         required: false
-      }]
+      }],
+      limit: Number(limit),
+      offset: Number(offset),
+      order: [['createdAt', 'DESC']]
     })
+    const total = await User.count()
     res.json({
       success: true,
-      users
+      users,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
     })
   } catch (error) {
     console.error('Get all users error:', error.message)

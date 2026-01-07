@@ -12,6 +12,10 @@ export default function AdminDashboard() {
   const [transactionTab, setTransactionTab] = useState('buy');
   const [transactionPage, setTransactionPage] = useState(1);
   const [totalTransactions, setTotalTransactions] = useState(0);
+  const [partnerPage, setPartnerPage] = useState(1);
+  const [totalPartners, setTotalPartners] = useState(0);
+  const [userPage, setUserPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const limit = 10;
   const [formData, setFormData] = useState({
     partnerCode: "",
@@ -22,17 +26,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, transactionTab, transactionPage]);
+  }, [currentPage, transactionTab, transactionPage, partnerPage, userPage]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       if (currentPage === 'partners') {
-        const res = await getAllPartners();
+        const offset = (partnerPage - 1) * limit;
+        const res = await getAllPartners({ limit, offset });
         setPartners(res.partners || []);
+        setTotalPartners(res.total || 0);
       } else if (currentPage === 'users') {
-        const res = await getAllUsers();
+        const offset = (userPage - 1) * limit;
+        const res = await getAllUsers({ limit, offset });
         setUsers(res.users || []);
+        setTotalUsers(res.total || 0);
       } else if (currentPage === 'transactions') {
         const offset = (transactionPage - 1) * limit;
         const params = transactionTab === 'buy' ? { eventType: 'COLLECTION', limit, offset } : { eventType: 'WITHDRAWAL', limit, offset };
@@ -352,6 +360,48 @@ const handleLogout = () => {
             )}
 
             {/* Pagination */}
+            {currentPage === 'partners' && totalPartners > limit && (
+              <div className="flex justify-center items-center gap-4 px-6 py-4 border-t border-white/20">
+                <button
+                  onClick={() => setPartnerPage(Math.max(1, partnerPage - 1))}
+                  disabled={partnerPage === 1}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Previous
+                </button>
+                <span className="text-white">
+                  Page {partnerPage} of {Math.ceil(totalPartners / limit)}
+                </span>
+                <button
+                  onClick={() => setPartnerPage(Math.min(Math.ceil(totalPartners / limit), partnerPage + 1))}
+                  disabled={partnerPage === Math.ceil(totalPartners / limit)}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+            {currentPage === 'users' && totalUsers > limit && (
+              <div className="flex justify-center items-center gap-4 px-6 py-4 border-t border-white/20">
+                <button
+                  onClick={() => setUserPage(Math.max(1, userPage - 1))}
+                  disabled={userPage === 1}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Previous
+                </button>
+                <span className="text-white">
+                  Page {userPage} of {Math.ceil(totalUsers / limit)}
+                </span>
+                <button
+                  onClick={() => setUserPage(Math.min(Math.ceil(totalUsers / limit), userPage + 1))}
+                  disabled={userPage === Math.ceil(totalUsers / limit)}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold"
+                >
+                  Next
+                </button>
+              </div>
+            )}
             {currentPage === 'transactions' && totalTransactions > limit && (
               <div className="flex justify-center items-center gap-4 px-6 py-4 border-t border-white/20">
                 <button
