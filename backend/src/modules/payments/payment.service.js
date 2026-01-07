@@ -15,7 +15,7 @@ export async function createPaymentLink(user, paymentDetails = {}) {
       isOpenLink = false,
       amountLocked = true,
       customerPays = false,
-      acceptedPaymentOptions = ['card', 'google_pay', 'apple_pay']
+      acceptedPaymentOptions = ['card', 'google_pay', 'apple_pay','cashapp']
     } = paymentDetails
 
     // Generate unique custom URL path if not provided
