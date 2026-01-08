@@ -125,8 +125,9 @@ export async function getAllPartners() {
   return await api.get('/auth/admin/partners')
 }
 
-export async function getUsersByPartner() {
-  return await api.get('/partners/users')
+export async function getUsersByPartner(params = {}) {
+  const query = new URLSearchParams(params)
+  return await api.get(`/partners/users?${query}`)
 }
 
 export async function getPartnerTransactions(params = {}) {

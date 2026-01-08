@@ -139,19 +139,24 @@ export async function partnerLogin(req, res) {
 
 export async function getUsersByPartnerCode(req, res) {
   const partnerCode = req.user.partnerCode
+  const { limit = 20, offset = 0 } = req.query
 
   if (!partnerCode) {
     return res.status(400).json({ message: 'Partner code not found in token' })
   }
 
   try {
-    const users = await User.findAll({
+    const { count, rows: users } = await User.findAndCountAll({
       where: { partner_code: partnerCode },
-      attributes: ['id', 'first_name', 'last_name', 'email', 'createdAt', 'updatedAt']
+      attributes: ['id', 'first_name', 'last_name', 'email', 'createdAt', 'updatedAt'],
+      limit: Number(limit),
+      offset: Number(offset),
+      order: [['createdAt', 'DESC']]
     })
     res.json({
       success: true,
-      users
+      users,
+      total: count
     })
   } catch (error) {
     console.error('Get users by partner code error:', error.message)
