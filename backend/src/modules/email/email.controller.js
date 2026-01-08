@@ -1,8 +1,5 @@
-import { verifyOTP } from '../../../../frontend/src/services/api.js'
 import { sendEmail, sendOTP, sendNotification } from './email.service.js'
-
-// In-memory OTP storage (use Redis in production)
-const otpStore = new Map()
+import { OTP } from './otp.model.js'
 
 export const sendCustomEmail = async (req, res) => {
   try {
@@ -27,13 +24,19 @@ export const sendOTPController = async (req, res) => {
       return res.status(400).json({ message: 'Missing required field: email' })
     }
 
+    // Remove any existing OTPs for this email
+    await OTP.destroy({
+      where: { email }
+    })
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-    // Store OTP with expiration (10 minutes)
-    otpStore.set(email, {
+    // Store OTP with expiration (5 minutes)
+    await OTP.create({
+      email,
       otp,
-      expiresAt: Date.now() + 10 * 60 * 1000
+      expires_at: new Date(Date.now() + 5 * 60 * 1000)
     })
 
     const result = await sendOTP(email, otp)
@@ -66,12 +69,25 @@ export const verifyOTPController = async (req, res) => {
       return res.status(400).json({ message: 'Email and OTP are required' })
     }
 
-    const isValid = await verifyOTP(email, otp)
-    if (isValid) {
-      res.status(200).json({ message: 'OTP verified successfully' })
-    } else {
-      res.status(400).json({ message: 'Invalid OTP' })
+    const storedOTP = await OTP.findOne({
+      where: {
+        email,
+        otp
+      }
+    })
+
+    if (!storedOTP) {
+      return res.status(400).json({ message: 'Invalid OTP' })
     }
+
+    if (new Date() > storedOTP.expires_at) {
+      await storedOTP.destroy()
+      return res.status(400).json({ message: 'OTP expired' })
+    }
+
+    // OTP is valid, remove it from database
+    await storedOTP.destroy()
+    res.status(200).json({ message: 'OTP verified successfully' })
   } catch (error) {
     console.error('Error verifying OTP:', error)
     res.status(500).json({ message: 'Failed to verify OTP' })
