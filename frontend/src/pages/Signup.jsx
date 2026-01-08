@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { signup, sendOTP, verifyOTP } from '../services/api'
+import { useState } from 'react'
+import { signup } from '../services/api'
 import { Link } from 'react-router-dom'
 
 export default function Signup() {
@@ -16,25 +16,12 @@ export default function Signup() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Email verification states
-  const [emailVerified, setEmailVerified] = useState(false)
-  const [showOTPModal, setShowOTPModal] = useState(false)
-  const [otp, setOtp] = useState('')
-  const [otpLoading, setOtpLoading] = useState(false)
-  const [otpError, setOtpError] = useState('')
-  const [resendTimer, setResendTimer] = useState(0)
-  const [canResend, setCanResend] = useState(false)
-
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
-    if (!emailVerified) {
-      setError('Please verify your email before signing up.')
-      return
-    }
     setLoading(true)
     setError('')
     try {
@@ -46,81 +33,6 @@ export default function Signup() {
       setLoading(false)
     }
   }
-
-  const handleVerifyEmail = async () => {
-    setOtpError('')
-    setOtp('')
-    setShowOTPModal(true)
-    setOtpLoading(true)
-    try {
-      await sendOTP({ email: form.email })
-      setResendTimer(120) // 2 minutes
-      setCanResend(false)
-    } catch (error) {
-      setOtpError(error.message || 'Failed to send OTP')
-      setShowOTPModal(false)
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) {
-      setOtpError('Please enter a valid 6-digit OTP')
-      return
-    }
-    setOtpLoading(true)
-    setOtpError('')
-    try {
-      await verifyOTP({ email: form.email, otp })
-      setEmailVerified(true)
-      setShowOTPModal(false)
-      setOtp('')
-    } catch (error) {
-      setOtpError(error.message || 'Invalid OTP')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  const handleResendOTP = async () => {
-    setOtpError('')
-    setOtpLoading(true)
-    try {
-      await sendOTP({ email: form.email })
-      setResendTimer(120)
-      setCanResend(false)
-    } catch (error) {
-      setOtpError(error.message || 'Failed to resend OTP')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  const handleCloseModal = () => {
-    setShowOTPModal(false)
-    setOtp('')
-    setOtpError('')
-    setResendTimer(0)
-    setCanResend(false)
-  }
-
-  // Timer effect for resend button
-  useEffect(() => {
-    let interval
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer(prev => {
-          if (prev <= 1) {
-            setCanResend(true)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [resendTimer])
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-green-600 via-emerald-500 to-teal-700 p-4 min-h-screen">
@@ -202,42 +114,19 @@ export default function Signup() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <svg className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      onChange={handleChange}
-                      required
-                      disabled={loading}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleVerifyEmail}
-                    disabled={loading || !form.email || emailVerified}
-                    className={`px-4 py-3 rounded-lg font-semibold transition duration-200 flex items-center gap-2 ${
-                      emailVerified
-                        ? 'bg-green-600 text-white cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
-                    }`}
-                  >
-                    {emailVerified ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Verified
-                      </>
-                    ) : (
-                      'Verify'
-                    )}
-                  </button>
+                <div className="relative">
+                  <svg className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
+                  />
                 </div>
               </div>
 
@@ -293,85 +182,6 @@ export default function Signup() {
             </div>
           </div>
         </div>
-
-        {/* OTP Modal */}
-        {showOTPModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Verify Your Email</h3>
-                <p className="text-gray-600 text-sm">
-                  We've sent a 6-digit OTP to <strong>{form.email}</strong>
-                </p>
-                {resendTimer > 0 && (
-                  <p className="text-gray-500 text-sm mt-2">
-                    Resend OTP in {Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, '0')}
-                  </p>
-                )}
-              </div>
-
-              {otpError && (
-                <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg">
-                  <span className="text-sm text-red-800">{otpError}</span>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Enter OTP</label>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    maxLength={6}
-                    className="w-full text-center text-2xl font-mono tracking-widest py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={otpLoading}
-                  />
-                </div>
-
-                <button
-                  onClick={handleVerifyOTP}
-                  disabled={otpLoading || otp.length !== 6}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2"
-                >
-                  {otpLoading ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Verifying...
-                    </>
-                  ) : (
-                    'Verify OTP'
-                  )}
-                </button>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleResendOTP}
-                    disabled={!canResend || otpLoading}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 font-semibold py-2 rounded-lg transition duration-200 text-sm"
-                  >
-                    Resend OTP
-                  </button>
-                  <button
-                    onClick={handleCloseModal}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition duration-200 text-sm"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Footer text */}
         <p className="text-center text-white text-sm mt-6 opacity-90">
