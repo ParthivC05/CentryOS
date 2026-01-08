@@ -1,4 +1,3 @@
-import { verifyOTP } from '../../../../frontend/src/services/api.js'
 import { sendEmail, sendOTP, sendNotification } from './email.service.js'
 
 // In-memory OTP storage (use Redis in production)
