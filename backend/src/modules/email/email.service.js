@@ -31,10 +31,10 @@ export const sendEmail = async (to, subject, text, html = null) => {
 }
 
 export const sendOTP = async (email, otp) => {
-  const subject = 'Your Treasure Pay Verification Code'
+  const subject = 'Your Orionstarsweeps Pay Verification Code'
   
   const text = `
-Your Treasure Pay Verification Code
+Your Orionstarsweeps Pay Verification Code
 
 Your OTP code is: ${otp}
 
@@ -43,7 +43,7 @@ This code will expire in 5 minutes.
 If you didn't request this code, please ignore this email.
 
 Thank you,
-Treasure Pay Team
+Orionstarsweeps Pay Team
   `.trim()
 
   const html = `
@@ -151,7 +151,7 @@ Treasure Pay Team
     </div>
     <div class="content">
       <p style="font-size: 16px; color: #333;">Hello,</p>
-      <p style="font-size: 16px; color: #333;">You've requested a verification code for your Treasure Pay account.</p>
+      <p style="font-size: 16px; color: #333;">You've requested a verification code for your Orionstarsweeps Pay account.</p>
       
       <div class="otp-box">
         <p style="margin: 0 0 15px 0; color: #059669; font-weight: bold; font-size: 14px; text-transform: uppercase;">Your Verification Code</p>
@@ -163,7 +163,7 @@ Treasure Pay Team
         <p><strong>⚠️ Important:</strong></p>
         <p>• This code will expire in 5 minutes</p>
         <p>• Do not share this code with anyone</p>
-        <p>• Treasure Pay will never ask for your verification code</p>
+        <p>• Orionstarsweeps Pay will never ask for your verification code</p>
       </div>
 
       <div class="warning">
@@ -176,7 +176,7 @@ Treasure Pay Team
       </p>
     </div>
     <div class="footer">
-      <p style="margin: 0;"><strong>Treasure Pay</strong></p>
+      <p style="margin: 0;"><strong>Orionstarsweeps Pay</strong></p>
       <p style="margin: 5px 0 0 0;">Thank you for using our service</p>
     </div>
   </div>
@@ -198,10 +198,10 @@ export const sendPartnerWelcomeEmail = async (email, partnerCode, password) => {
   const userSignupLink = `https://payment.orionstarsweeps.com/signup/?ref=${partnerCode}`
   const partnerLoginLink = `https://payment.orionstarsweeps.com/partner/login`
   
-  const subject = 'Welcome to Treasure Pay - Partner Account Created'
+  const subject = 'Welcome to Orionstarsweeps Pay - Partner Account Created'
   
   const text = `
-Welcome to Treasure Pay!
+Welcome to Orionstarsweeps Pay!
 
 Your partner account has been successfully created. Here are your account details:
 
@@ -216,7 +216,7 @@ Important Links:
 Please keep these credentials secure and do not share them with anyone.
 
 Thank you!
-Treasure Pay Team
+Orionstarsweeps Pay Team
   `.trim()
 
   const html = `
@@ -308,7 +308,7 @@ Treasure Pay Team
 </head>
 <body>
   <div class="header">
-    <h1>Welcome to Treasure Pay!</h1>
+    <h1>Welcome to Orionstarsweeps Pay!</h1>
   </div>
   <div class="content">
     <p>Your partner account has been successfully created. Here are your account details:</p>
@@ -346,8 +346,8 @@ Treasure Pay Team
     </div>
   </div>
   <div class="footer">
-    <p>Thank you for joining Treasure Pay!</p>
-    <p>Treasure Pay Team</p>
+    <p>Thank you for joining Orionstarsweeps Pay!</p>
+    <p>Orionstarsweeps Pay Team</p>
   </div>
 </body>
 </html>
@@ -380,7 +380,7 @@ ${gameUsername ? `Game Username: ${gameUsername}` : ''}
 
 Your ${transactionTypeLower} transaction has been ${status === 'completed' ? 'completed' : 'processed'} successfully.
 
-Thank you for using Treasure Pay!
+Thank you for using Orionstarsweeps Pay!
   `.trim()
 
   const html = `
@@ -554,11 +554,11 @@ Thank you for using Treasure Pay!
       </div>
 
       <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
-        Thank you for using Treasure Pay!
+        Thank you for using Orionstarsweeps Pay!
       </p>
     </div>
     <div class="footer">
-      <p style="margin: 0;"><strong>Treasure Pay</strong></p>
+      <p style="margin: 0;"><strong>Orionstarsweeps Pay</strong></p>
       <p style="margin: 5px 0 0 0;">Secure Payment Processing</p>
     </div>
   </div>

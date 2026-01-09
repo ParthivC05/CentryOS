@@ -166,7 +166,7 @@ export default function Signup() {
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-1">Create Account</h2>
-            <p className="text-center text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Join Treasure pay and manage your payments</p>
+            <p className="text-center text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Join Orionstarsweeps Pay and manage your payments</p>
 
             {partnerCode && (
               <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg">
