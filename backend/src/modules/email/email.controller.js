@@ -1,5 +1,6 @@
 import { sendEmail, sendOTP, sendNotification } from './email.service.js'
 import { OTP } from './otp.model.js'
+import { Op } from 'sequelize'
 
 export const sendCustomEmail = async (req, res) => {
   try {
@@ -23,6 +24,9 @@ export const sendOTPController = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: 'Missing required field: email' })
     }
+
+    // Clean up expired OTPs first
+    await cleanupExpiredOTPs()
 
     // Remove any existing OTPs for this email
     await OTP.destroy({
@@ -69,6 +73,9 @@ export const verifyOTPController = async (req, res) => {
       return res.status(400).json({ message: 'Email and OTP are required' })
     }
 
+    // Clean up expired OTPs before verification
+    await cleanupExpiredOTPs()
+
     const storedOTP = await OTP.findOne({
       where: {
         email,
@@ -91,5 +98,27 @@ export const verifyOTPController = async (req, res) => {
   } catch (error) {
     console.error('Error verifying OTP:', error)
     res.status(500).json({ message: 'Failed to verify OTP' })
+  }
+}
+
+// Cleanup function to delete expired OTPs
+export const cleanupExpiredOTPs = async () => {
+  try {
+    const deletedCount = await OTP.destroy({
+      where: {
+        expires_at: {
+          [Op.lt]: new Date()
+        }
+      }
+    })
+    
+    if (deletedCount > 0) {
+      console.log(`Cleaned up ${deletedCount} expired OTP(s)`)
+    }
+    
+    return deletedCount
+  } catch (error) {
+    console.error('Error cleaning up expired OTPs:', error)
+    throw error
   }
 }

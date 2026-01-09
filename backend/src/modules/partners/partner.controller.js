@@ -4,6 +4,7 @@ import { Partner } from './partner.model.js'
 import { User } from '../users/user.model.js'
 import { Transaction } from '../payments/payment.model.js'
 import { Op } from 'sequelize'
+import { sendPartnerWelcomeEmail } from '../email/email.service.js'
 
 export async function addPartner(req, res) {
   const { partnerCode, name, email, password, role = 'PARTNER' } = req.body
@@ -31,6 +32,15 @@ export async function addPartner(req, res) {
         email,
         password_hash
       })
+
+      // Send welcome email to partner
+      try {
+        await sendPartnerWelcomeEmail(email, partnerCode, password)
+        console.log(`Welcome email sent to partner: ${email}`)
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError.message)
+        // Don't fail the partner creation if email fails, just log the error
+      }
 
       res.status(201).json({
         success: true,

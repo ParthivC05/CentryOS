@@ -1,7 +1,9 @@
 import crypto from 'crypto'
 import { Transaction } from '../payments/payment.model.js'
 import { User } from '../users/user.model.js'
+import { Partner } from '../partners/partner.model.js'
 import { Op } from 'sequelize'
+import { sendTransactionNotification } from '../email/email.service.js'
 
 export async function centryOsWebhook(req, res) {
   const requestId = crypto.randomUUID()
@@ -112,6 +114,7 @@ export async function centryOsWebhook(req, res) {
 
 
     let created = false
+    let transactionInstance = null
 
     if (record.transactionId) {
       const [instance, wasCreated] = await Transaction.findOrCreate({
@@ -128,12 +131,148 @@ export async function centryOsWebhook(req, res) {
         })
       }
 
+      transactionInstance = instance
       created = wasCreated
     } else {
-      await Transaction.create(record)
+      transactionInstance = await Transaction.create(record)
       created = true
     }
 
+    // Send email notification for successful transactions
+    // Check status case-insensitively
+    const statusLower = (record.status || '').toLowerCase()
+    const isSuccessful = statusLower === 'completed' || statusLower === 'success' || statusLower === 'successful'
+    
+    console.info('[CENTRYOS_WEBHOOK] Checking email notification', {
+      requestId,
+      status: record.status,
+      statusLower,
+      isSuccessful,
+      hasUserId: !!record.userId,
+      userId: record.userId,
+      hasTransaction: !!transactionInstance
+    })
+    
+    if (isSuccessful && record.userId && transactionInstance) {
+      try {
+        // Get user email based on event type
+        let user = null
+        if (eventType === 'COLLECTION') {
+          // For COLLECTION, userId is the user.id (integer as string)
+          user = await User.findByPk(parseInt(record.userId))
+        } else if (eventType === 'WITHDRAWAL') {
+          // For WITHDRAWAL, userId is the centryos_entity_id (string)
+          user = await User.findOne({ where: { centryos_entity_id: record.userId } })
+        }
+
+        console.info('[CENTRYOS_WEBHOOK] Looking up user for email notification', {
+          requestId,
+          userId: record.userId,
+          eventType,
+          userIdType: typeof record.userId
+        })
+
+        if (user && user.email) {
+          console.info('[CENTRYOS_WEBHOOK] User found, preparing email', {
+            requestId,
+            userId: user.id,
+            email: user.email,
+            partnerCode: user.partner_code,
+            eventType
+          })
+
+          // Extract game name and username from rawPayload or transaction data
+          let gameName = null
+          let gameUsername = null
+
+          if (record.rawPayload && record.rawPayload.payload) {
+            const payload = record.rawPayload.payload
+            gameName = payload.gameName || payload.game_name || null
+            gameUsername = payload.gameUsername || payload.game_username || null
+          }
+
+          // Prepare transaction data for email
+          const transactionData = {
+            eventType: record.eventType,
+            amount: record.amount,
+            transactionId: record.transactionId,
+            method: record.method,
+            status: record.status,
+            gameName,
+            gameUsername
+          }
+
+          // Send email to user
+          const emailsToSend = [user.email]
+          
+          // Check if user has a partner and send email to partner as well
+          if (user.partner_code) {
+            try {
+              const partner = await Partner.findOne({ 
+                where: { partner_code: user.partner_code } 
+              })
+              
+              if (partner && partner.email) {
+                emailsToSend.push(partner.email)
+                console.info('[CENTRYOS_WEBHOOK] Partner found, will send email to partner as well', {
+                  requestId,
+                  partnerCode: user.partner_code,
+                  partnerEmail: partner.email
+                })
+              } else {
+                console.warn('[CENTRYOS_WEBHOOK] Partner not found or no email', {
+                  requestId,
+                  partnerCode: user.partner_code,
+                  partnerFound: !!partner,
+                  hasPartnerEmail: partner ? !!partner.email : false
+                })
+              }
+            } catch (partnerError) {
+              console.error('[CENTRYOS_WEBHOOK] Error looking up partner', {
+                requestId,
+                partnerCode: user.partner_code,
+                error: partnerError.message
+              })
+            }
+          }
+
+          // Send emails to all recipients
+          console.info('[CENTRYOS_WEBHOOK] Sending transaction notification emails', {
+            requestId,
+            emails: emailsToSend,
+            transactionData
+          })
+
+          const emailPromises = emailsToSend.map(email => 
+            sendTransactionNotification(email, transactionData)
+          )
+
+          await Promise.all(emailPromises)
+          
+          console.info('[CENTRYOS_WEBHOOK] Transaction notification emails sent successfully', {
+            requestId,
+            emails: emailsToSend,
+            transactionId: record.transactionId,
+            eventType
+          })
+        } else {
+          console.warn('[CENTRYOS_WEBHOOK] User not found or no email for transaction notification', {
+            requestId,
+            userId: record.userId,
+            eventType,
+            userFound: !!user,
+            hasEmail: user ? !!user.email : false
+          })
+        }
+      } catch (emailError) {
+        console.error('[CENTRYOS_WEBHOOK] Failed to send transaction notification email', {
+          requestId,
+          error: emailError.message,
+          transactionId: record.transactionId
+        })
+        // Don't fail the webhook if email fails
+      }
+    }
 
     console.info('[CENTRYOS_WEBHOOK] Processed successfully', {
       requestId,
