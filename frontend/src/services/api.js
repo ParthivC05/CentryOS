@@ -145,4 +145,12 @@ export async function getAllTransactions(params = {}) {
   return await api.get(`/auth/admin/transactions?${query}`)
 }
 
+export async function sendOTP(payload) {
+  return await api.post('/email/otp', payload)
+}
+
+export async function verifyOTP(payload) {
+  return await api.post('/email/verify-otp', payload)
+}
+
 export default api
