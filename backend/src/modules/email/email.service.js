@@ -357,7 +357,7 @@ Treasure Pay Team
 }
 
 export const sendTransactionNotification = async (email, transaction) => {
-  const { eventType, amount, transactionId, method, status, gameName, gameUsername } = transaction
+  const { eventType, amount, transactionId, method, status, gameName, gameUsername, userEmail } = transaction
   const isBuy = eventType === 'COLLECTION'
   const transactionType = isBuy ? 'Purchase' : 'Redeem'
   const transactionTypeLower = isBuy ? 'purchase' : 'redeem'
@@ -372,6 +372,7 @@ export const sendTransactionNotification = async (email, transaction) => {
 ${transactionType} Transaction ${status === 'completed' ? 'Completed' : 'Successful'}
 
 Transaction ID: ${transactionId}
+User Email: ${userEmail || 'N/A'}
 Amount: $${amount}
 Payment Method: ${method || 'N/A'}
 ${gameName ? `Game: ${gameName}` : ''}
@@ -513,6 +514,10 @@ Thank you for using Treasure Pay!
           <span class="detail-value">
             <span class="transaction-id">${transactionId}</span>
           </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">User Email:</span>
+          <span class="detail-value">${userEmail || 'N/A'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Transaction Type:</span>

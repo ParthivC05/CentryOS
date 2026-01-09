@@ -199,7 +199,8 @@ export async function centryOsWebhook(req, res) {
             method: record.method,
             status: record.status,
             gameName,
-            gameUsername
+            gameUsername,
+            userEmail: user.email // Include user email in transaction data
           }
 
           // Send email to user
