@@ -97,7 +97,7 @@ export default function Home() {
     const amt = parseFloat(amount)
 
     if (isNaN(amt)) return setError('Please enter a valid amount')
-    if (modalType === 'buy' && amt <= 0) return setError('Amount must be greater than 0')
+    if (modalType === 'buy' && amt < 10) return setError('Minimum buy amount is $10')
     if (modalType === 'redeem' && amt < 10) return setError('Minimum withdrawal is $10')
 
     if (modalType === 'redeem') {
@@ -174,7 +174,7 @@ export default function Home() {
             {/* Buy */}
             <ActionCard
               title="Buy Sweeps Credits"
-              desc="Purchase credits to use in your account"
+              desc="Purchase credits to use in your account (Min: $10)"
               gradient="from-green-600 to-emerald-700"
               onClick={handleBuyClick}
               loading={loading}
