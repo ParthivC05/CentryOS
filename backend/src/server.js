@@ -4,6 +4,7 @@ import { sequelize } from './db/index.js'
 import { User } from './modules/users/user.model.js'
 import { Partner } from './modules/partners/partner.model.js'
 import { Transaction } from './modules/payments/payment.model.js'
+import { OTP } from './modules/email/otp.model.js'
 
 const PORT = process.env.PORT || 5000
 

@@ -15,6 +15,7 @@ export default function Signup() {
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailError, setEmailError] = useState('')
 
   // Email verification states
   const [emailVerified, setEmailVerified] = useState(false)
@@ -24,9 +25,27 @@ export default function Signup() {
   const [otpError, setOtpError] = useState('')
   const [resendTimer, setResendTimer] = useState(0)
   const [canResend, setCanResend] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
+  const validateEmail = email => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!email) {
+      return 'Email is required'
+    }
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address'
+    }
+    return ''
+  }
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+
+    if (name === 'email') {
+      const error = validateEmail(value)
+      setEmailError(error)
+    }
   }
 
   const handleSubmit = async e => {
@@ -54,7 +73,7 @@ export default function Signup() {
     setOtpLoading(true)
     try {
       await sendOTP({ email: form.email })
-      setResendTimer(120) // 2 minutes
+      setResendTimer(30) // 30 seconds
       setCanResend(false)
     } catch (error) {
       setOtpError(error.message || 'Failed to send OTP')
@@ -86,14 +105,16 @@ export default function Signup() {
   const handleResendOTP = async () => {
     setOtpError('')
     setOtpLoading(true)
+    setIsResending(true)
     try {
       await sendOTP({ email: form.email })
-      setResendTimer(120)
+      setResendTimer(30)
       setCanResend(false)
     } catch (error) {
       setOtpError(error.message || 'Failed to resend OTP')
     } finally {
       setOtpLoading(false)
+      setIsResending(false)
     }
   }
 
@@ -123,7 +144,7 @@ export default function Signup() {
   }, [resendTimer])
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-green-600 via-emerald-500 to-teal-700 p-4 min-h-screen">
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-600 via-emerald-500 to-teal-700 p-4">
       {/* Animated background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-white opacity-10 rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl"></div>
@@ -134,9 +155,9 @@ export default function Signup() {
           {/* Header with gradient */}
           <div className="h-2 bg-gradient-to-r from-green-600 to-emerald-600"></div>
           
-          <div className="p-8 sm:p-10">
+          <div className="p-4 sm:p-6">
             {/* Logo/Icon */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -144,8 +165,8 @@ export default function Signup() {
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">Create Account</h2>
-            <p className="text-center text-gray-600 mb-8">Join Treasure pay and manage your payments</p>
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-1">Create Account</h2>
+            <p className="text-center text-gray-600 mb-6">Join Treasure pay and manage your payments</p>
 
             {partnerCode && (
               <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg">
@@ -178,7 +199,7 @@ export default function Signup() {
                       onChange={handleChange}
                       required
                       disabled={loading}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
                     />
                   </div>
                 </div>
@@ -194,7 +215,7 @@ export default function Signup() {
                       onChange={handleChange}
                       required
                       disabled={loading}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
                     />
                   </div>
                 </div>
@@ -202,43 +223,49 @@ export default function Signup() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <svg className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      onChange={handleChange}
-                      required
-                      disabled={loading}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleVerifyEmail}
-                    disabled={loading || !form.email || emailVerified}
-                    className={`px-4 py-3 rounded-lg font-semibold transition duration-200 flex items-center gap-2 ${
-                      emailVerified
-                        ? 'bg-green-600 text-white cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
+                <div className="relative">
+                  <svg className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    onChange={handleChange}
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                    required
+                    disabled={loading}
+                    className={`w-full pl-10 pr-16 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed transition ${
+                      emailError
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-green-500'
                     }`}
-                  >
-                    {emailVerified ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Verified
-                      </>
-                    ) : (
-                      'Verify'
-                    )}
-                  </button>
+                  />
+                  {emailVerified ? (
+                    <svg className="absolute right-3 top-3.5 w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    form.email && !emailError && (
+                      <span
+                        onClick={handleVerifyEmail}
+                        disabled={loading || !form.email || emailVerified}
+                        className={`absolute right-3 top-0 text-sm font-semibold cursor-pointer transition flex items-center h-full ${
+                          emailVerified
+                            ? 'text-green-600 cursor-not-allowed'
+                            : otpLoading
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-blue-600 hover:text-blue-700'
+                        }`}
+                      >
+                        {otpLoading ? 'Sending...' : 'Verify'}
+                      </span>
+                    )
+                  )}
                 </div>
+                {emailError && (
+                  <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                )}
               </div>
 
               <div>
@@ -262,7 +289,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 mt-6"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 mt-4"
               >
                 {loading ? (
                   <>
@@ -346,7 +373,7 @@ export default function Signup() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Verifying...
+                      Sending
                     </>
                   ) : (
                     'Verify OTP'
@@ -359,7 +386,7 @@ export default function Signup() {
                     disabled={!canResend || otpLoading}
                     className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 font-semibold py-2 rounded-lg transition duration-200 text-sm"
                   >
-                    Resend OTP
+                    {otpLoading && isResending ? 'Resending...' : 'Resend OTP'}
                   </button>
                   <button
                     onClick={handleCloseModal}
